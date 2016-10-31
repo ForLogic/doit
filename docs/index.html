@@ -516,7 +516,7 @@
         &lt;Column header="id"&gt;{users_list.id}&lt;/Column&gt;
         &lt;Column header="name"&gt;{users_list.name}&lt;/Column&gt;
         &lt;Column header="email"&gt;{users_list.email}&lt;/Column&gt;
-      &lt;/WriteLine&gt;
+      &lt;/WriteData&gt;
     &lt;/Csv&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
@@ -543,14 +543,14 @@
 			<section class="tag2">
 				<h4 id="DataTableCount">Count</h4>
 				<p>Count the rows found in the specified table.</p>
-				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Count<br />
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Count<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
 &lt;Configuration&gt;
   &lt;Execute&gt;
-    &lt;SetValue&gt;
+    &lt;DataTable&gt;
       &lt;Count data="users_list" where="" to="users_count" /&gt;
-    &lt;/SetValue&gt;
+    &lt;/DataTable&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
 			</section>
@@ -558,14 +558,14 @@
 			<section class="tag2">
 				<h4 id="DataTableSum">Sum</h4>
 				<p>Sum values from the rows in the specified table.</p>
-				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Sum<br />
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Sum<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
 &lt;Configuration&gt;
   &lt;Execute&gt;
-    &lt;SetValue&gt;
+    &lt;DataTable&gt;
       &lt;Sum data="products_list" column="total" where="" to="total_products" /&gt;
-    &lt;/SetValue&gt;
+    &lt;/DataTable&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
 			</section>
@@ -573,14 +573,14 @@
 			<section class="tag2">
 				<h4 id="DataTableAvg">Avg</h4>
 				<p>Calculate the average values from the rows in the specified table.</p>
-				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Avg<br />
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Avg<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
 &lt;Configuration&gt;
   &lt;Execute&gt;
-    &lt;SetValue&gt;
+    &lt;DataTable&gt;
       &lt;Avg data="products_list" column="price" where="" to="avg_price" /&gt;
-    &lt;/SetValue&gt;
+    &lt;/DataTable&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
 			</section>
@@ -588,14 +588,14 @@
 			<section class="tag2">
 				<h4 id="DataTableMin">Min</h4>
 				<p>Get the min value from the rows in the specified table.</p>
-				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Min<br />
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Min<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
 &lt;Configuration&gt;
   &lt;Execute&gt;
-    &lt;SetValue&gt;
+    &lt;DataTable&gt;
       &lt;Min data="products_list" column="price" where="" to="min_price" /&gt;
-    &lt;/SetValue&gt;
+    &lt;/DataTable&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
 			</section>
@@ -603,14 +603,14 @@
 			<section class="tag2">
 				<h4 id="DataTableMax">Max</h4>
 				<p>Get the max value from the rows in the specified table.</p>
-				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Max<br />
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Max<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
 &lt;Configuration&gt;
   &lt;Execute&gt;
-    &lt;SetValue&gt;
+    &lt;DataTable&gt;
       &lt;Max data="products_list" column="price" where="" to="max_price" /&gt;
-    &lt;/SetValue&gt;
+    &lt;/DataTable&gt;
   &lt;/Execute&gt;
 &lt;/Configuration&gt;</pre>
 			</section>
@@ -878,7 +878,7 @@
 
 			<section class="tag2">
 				<h4 id="LocalDiskDeleteFolder">DeleteFolder</h4>
-				<p>Delete the specified file.</p>
+				<p>Delete the specified folder.</p>
 				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; DeleteFolder<br />
 				<pre class="prettyprint">
 &lt;?xml version="1.0" encoding="utf-16" ?&gt;
