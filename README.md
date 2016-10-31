@@ -1,5 +1,5 @@
 # doit
-This tool runs a xml script to automate recurring tasks.
+This tool runs a xml script to automate recurring tasks. Useful on backup scenarios.
 
 ## Index
 1. [The Configuration File](#TheConfigurationFile)
