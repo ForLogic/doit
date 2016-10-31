@@ -13,6 +13,7 @@ This tool runs a xml script to automate recurring tasks.
     2. [Zip](#ExecuteZip)
         * [AddFile](#ExecuteZipAddFile)
         * [AddBlob](#ExecuteZipAddBlob)
+        * AddFolder _(To-Do)_
         * [Extract](#ExecuteZipExtract)
     3. [Process](#ExecuteProcess)
         * [Start](#ExecuteProcessStart)
@@ -61,6 +62,14 @@ This tool runs a xml script to automate recurring tasks.
         * [Upload](#ExecuteStorageUpload)
         * [Download](#ExecuteStorageDownload)
         * [ListBlobs](#ExecuteStorageListBlobs)
+    16. [Condition](#ExecuteCondition)
+    17. Ftp _(To-Do)_
+        * Download
+        * Upload
+        * ListFiles
+    18. Services _(To-Do)_
+        * Start
+        * Stop
 
 ## <a id="TheConfigurationFile">The Configuration File</a>
 The default configuration file is called "DoIt.config.xml". Its main sections are "Settings" and "Execute", which contains the settings used when executing and the steps to run, respectively.
@@ -868,4 +877,72 @@ The columns with the name starting with "metadata_" will only be filled with the
     </Storage>
   </Execute>
 </Configuration>
+```
+
+### <a id="ExecuteCondition">Condition</a>
+Perform a condition and run only the "True" or "False" inner tag, according to the result. The available condition types are:
+* has-disk-space
+* file-exists
+* folder-exists
+* has-rows
+* is-datetime
+* if
+
+*Tag Location: Configuration > Execute > Condition*
+
+#### Sample1 - Condition Type: has-disk-space
+```html
+<Condition type="has-disk-space" drive="C:\" min="10000">
+  <True>
+    <Log>True Result</Log>
+  </True>
+</Condition>
+```
+
+#### Sample2 - Condition Type: file-exists
+```html
+<Condition type="file-exists" path="C:\MyFile.txt">
+  <True>
+    <Log>True Result</Log>
+  </True>
+</Condition>
+```
+
+#### Sample3 - Condition Type folder-exists
+```html
+<Condition type="folder-exists" path="C:\MyFolder">
+  <True>
+    <Log>True Result</Log>
+  </True>
+</Condition>
+```
+
+#### Sample4 - Condition Type: has-rows
+```html
+<Condition type="has-rows" data="customers_list">
+  <True>
+    <Log>True Result</Log>
+  </True>
+</Condition>
+```
+
+#### Sample5 - Condition Type: is-datetime
+```html
+<Condition type="is-datetime" days="all|mon|wed|fri|1|15" time="08-12">
+  <True>
+    <Log>True Result</Log>
+  </True>
+</Condition>
+```
+
+#### Sample6 - Condition Type: if
+```html
+<Condition type="if" value1="{files_count}" value2="0" comparison="greater" valueType="numeric">
+  <True>
+    <Log>True Result</Log>
+  </True>
+  <False>
+    <Log>False Result</Log>
+  </False>
+</Condition>
 ```
