@@ -1,0 +1,985 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>DoIt - Task Script</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+	<style type="text/css">
+		body{background-color:#444}
+		body>div.container{background-color:#FFF;padding-top:15px;}
+		h3{margin:0px;padding:10px;background-color:#CDE;}
+		h4{margin:0px}
+		section.tag1{border:1px solid #E3E9F0;padding:10px;margin:10px 0px;background-color:#F0F6F9;margin-top:0px;border-top:none;}
+		section.tag2:first-child{margin-top:0px;padding-top:0px;border-top:none;}
+		section.tag2{margin-top:10px;padding-top:10px;border-top:1px solid #DEF;}
+		h3.fixed{position:fixed;top:0px;width:1140px;}
+	</style>
+</head>
+<body>
+	<div class="container">
+
+		<div class="jumbotron">
+			<h1>DoIt</h1>
+			<p>This tool runs a xml script to automate recurring tasks.</p>
+		</div>
+
+		<h2>Index</h2>
+		<h3>Settings</h3>
+		<section class="tag1">
+			<ol>
+				<li><a href="#LogFile">LogFile</a></li>
+				<li><a href="#Exceptions">Exceptions</a></li>
+				<li><a href="#ConnectionStrings">ConnectionStrings</a></li>
+			</ol>
+		</section>
+
+		<h3>Execute Commands</h3>
+		<section class="tag1">
+			<ol>
+				<li><a href="#Database">Database</a>
+					<ul>
+						<li><a href="#DatabaseBackup">Backup</a></li>
+					</ul>
+				</li>
+				<li><a href="#Zip">Zip</a>
+					<ul>
+						<li><a href="#ZipAddFile">AddFile</a></li>
+						<li><a href="#ZipAddBlob">AddBlob</a></li>
+						<li><a href="#ZipExtract">Extract</a></li>
+					</ul>
+				</li>
+				<li><a href="#Process">Process</a>
+					<ul>
+						<li><a href="#ProcessStart">Start</a></li>
+						<li><a href="#ProcessKill">Kill</a></li>
+						<li><a href="#ProcessList">List</a></li>
+					</ul>
+				</li>
+				<li><a href="#Sql">Sql</a>
+					<ul>
+						<li><a href="#SqlExecute">Execute</a></li>
+						<li><a href="#SqlSelect">Select</a></li>
+						<li><a href="#SqlScalar">Scalar</a></li>
+					</ul>
+				</li>
+				<li>Http
+					<ul>
+						<li>Download</li>
+					</ul>
+				</li>
+				<li><a href="#Mail">Mail</a></li>
+				<li>Condition</li>
+				<li><a href="#ForEach">ForEach</a></li>
+				<li><a href="#DataTable">DataTable</a>
+					<ul>
+						<li><a href="#DataTableCount">Count</a></li>
+						<li><a href="#DataTableSum">Sum</a></li>
+						<li><a href="#DataTableAvg">Avg</a></li>
+						<li><a href="#DataTableMin">Min</a></li>
+						<li><a href="#DataTableMax">Max</a></li>
+						<li><a href="#DataTableSetRowValue">SetRowValue</a></li>
+						<li><a href="#DataTableGetDataRow">GetDataRow</a></li>
+						<li><a href="#DataTableDiff">Diff</a></li>
+						<li><a href="#DataTableJoin">Join</a></li>
+						<li><a href="#DataTableIntersect">Intersect</a></li>
+						<li><a href="#DataTableRemoveRows">RemoveRows</a></li>
+						<li><a href="#DataTableInsertRow">InsertRow</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="#SetValue">SetValue</a>
+					<ul>
+						<li><a href="#SetValueCalc">Calc</a></li>
+						<li><a href="#SetValueCalcDate">CalcDate</a></li>
+						<li><a href="#SetValueString">String</a></li>
+						<li><a href="#SetValueDate">Date</a></li>
+					</ul>
+				</li>
+				<li><a href="#Csv">Csv</a>
+					<ul>
+						<li><a href="#CsvWriteLine">WriteLine</a></li>
+						<li><a href="#CsvWriteData">WriteData</a></li>
+						<li><a href="#CsvLoad">Load</a></li>
+					</ul>
+				</li>
+				<li><a href="#Storage">Storage</a>
+					<ul>
+						<li><a href="#StorageUpload">Upload</a></li>
+						<li><a href="#StorageDownload">Download</a></li>
+						<li><a href="#StorageListBlobs">ListBlobs</a></li>
+					</ul>
+				</li>
+				<li><a href="#LocalDisk">LocalDisk</a>
+					<ul>
+						<li><a href="#LocalDiskListFiles">ListFiles</a></li>
+						<li><a href="#LocalDiskMoveFile">MoveFile</a></li>
+						<li><a href="#LocalDiskMoveFolder">MoveFolder</a></li>
+						<li><a href="#LocalDiskCopyFile">CopyFile</a></li>
+						<li><a href="#LocalDiskDeleteFile">DeleteFile</a></li>
+						<li><a href="#LocalDiskDeleteFolder">DeleteFolder</a></li>
+					</ul>
+				</li>
+				<li><a href="#Sleep">Sleep</a></li>
+				<li><a href="#Log">Log</a></li>
+				<li><a href="#Try">Try</a></li>
+				<li><a href="#Exception">Exception</a></li>
+				<li>Stop</li>
+			</ol>
+		</section>
+
+		<h2>Settings</h2>
+
+		<h3 id="LogFile">LogFile</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Use this tag to specify the log path and variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Settings &gt; LogFile<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Settings&gt;
+    &lt;LogFile toVar="logFile"&gt;%programdata%\DoIt\DoIt_{now:yyyy-MM-dd}.log&lt;/LogFile&gt;
+  &lt;/Settings&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Exceptions">Exceptions</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Use this tag to mail users if an exception occurs.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Settings &gt; Exceptions<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Settings&gt;
+    &lt;Exceptions smtp="host=smtp.company.com; user=mail_user@company.com; pass=abc123; port=587; ssl=true; from=mail_user@company.com;" attachLogFile="true"&gt;
+      &lt;Mail&gt;admin@company.com&lt;/Mail&gt;
+    &lt;/Exceptions&gt;
+  &lt;/Settings&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="ConnectionStrings">ConnectionStrings</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>This tag set database and azure storage account connection strings.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Settings &gt; ConnectionStrings<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Settings&gt;
+    &lt;ConnectionStrings&gt;
+      &lt;Database id="1"&gt;Data Source=localhost\sql2016express; Initial Catalog=database; Integrated Security=false; User Id=sa; Password=123;&lt;/Database&gt;
+      &lt;Storage id="1"&gt;DefaultEndpointsProtocol=https;AccountName=my_account;AccountKey=871oQKMifslemflIwq54e0fd8sJskdmw98348dMF0suJ0WODK73lMlwiehf34u0mm5ez6MdiewklFH3/w2/IEK==&lt;/Storage&gt;
+    &lt;/ConnectionStrings&gt;
+  &lt;/Settings&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h2>Execute Commands</h2>
+		<h3 id="Database">Database</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="DatabaseBackup">Backup</h4>
+				<p>Backup SQL Server databases.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Database &gt; Backup<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Database id="1"&gt;
+      &lt;Backup toFile="%programdata%\DoIt\MyDatabase_{now:yyyy-MM-dd_HH-mm}.bak" type="bak" withOptions="with compression" timeout="1800" toVar="bak1" /&gt;
+    &lt;/Database&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Zip">Zip</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="ZipAddFile">AddFile</h4>
+				<p>Add a new file to the specified zip package.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Zip &gt; AddFile<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Zip path="C:\MyFiles.zip" mode="write"&gt;
+      &lt;AddFile name="C:\MyFile1.txt" deleteSource="true" zipFolder="" zipFilename="MainData.txt" /&gt;
+      &lt;AddFile forEach="users_list" where="is_active=1" name="C:\Users\UserData{users_list.id}.csv" deleteSource="false" /&gt;
+    &lt;/Zip&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="ZipAddBlob">AddBlob</h4>
+				<p>Download blob from a storage account and add it to the specified zip package.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Zip &gt; AddBlob<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Zip path="C:\MyFiles.zip" mode="write"&gt;
+      &lt;AddBlob fromStorage="1" name="my_container/myblob1.txt" zipFolder="" zipFilename="File.txt" /&gt;
+      &lt;AddBlob forEach="blobs_list" where="blob_length &lt;= 5*1024*1024" fromStorage="1" name="{blobs_list.blob_container}/{blobs_list.blob_name}" snapshotTime="" dateTime="{blobs_list.blob_last_modified}" size="{blobs_list.blob_length}" /&gt;
+    &lt;/Zip&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="ZipExtract">Extract</h4>
+				<p>Extract a zip package to the specified folder.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Zip &gt; Extract<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Zip path="C:\MyFiles.zip" mode="read"&gt;
+      &lt;Extract toFolder="C:\MyFolder" /&gt;
+    &lt;/Zip&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Process">Process</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="ProcessStart">Start</h4>
+				<p>Starts an external application.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Process &gt; Start<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Process&gt;
+      &lt;Start path="C:\MyApp.exe" args="" wait="true" time="" /&gt;
+    &lt;/Process&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="ProcessKill">Kill</h4>
+				<p>Kills an executing process.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Process &gt; Kill<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Process&gt;
+      &lt;Kill id="" name="chrome" /&gt;
+    &lt;/Process&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="ProcessList">List</h4>
+				<p>List the executing processes. The returned datatable will contain the columns:
+					<ul>
+						<li>id (int)</li>
+						<li>session_id (int)</li>
+						<li>name (string)</li>
+						<li>machine (string)</li>
+						<li>start (DateTime)</li>
+						<li>filename (string)</li>
+					</ul>
+				</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Process &gt; List<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Process&gt;
+      &lt;List name="" machine="" regex="" to="process_list" /&gt;
+    &lt;/Process&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Sql">Sql</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="SqlExecute">Execute</h4>
+				<p>Execute SQL commands.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Sql &gt; Execute<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Sql database="1"&gt;
+      &lt;Execute&gt;insert into backups (start_date) values (getdate())&lt;/Execute&gt;
+    &lt;/Sql&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="SqlSelect">Select</h4>
+				<p>Execute SQL queries and set the results to the specified variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Sql &gt; Select<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Sql database="1"&gt;
+      &lt;Select to="users_table"&gt;
+        select us.id, us.name, us.email from users us where us.removed=0
+      &lt;/Select&gt;
+    &lt;/Sql&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="SqlScalar">Scalar</h4>
+				<p>Execute the SQL command/query and set the result to the specified variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Sql &gt; Scalar<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Sql database="1"&gt;
+      &lt;Scalar to="user_id"&gt;
+        select us.id from users us where us.email='user@mycompany.com'
+      &lt;/Scalar&gt;
+    &lt;/Sql&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Mail">Mail</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Send an e-mail.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Mail<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Mail smtp="host=smtp.domain.com; from=user@domain.com; port=587; ssl=true; user=user@domain.com; pass=123;" to="other_user@domain.com" subject="Hello World"&gt;
+      &lt;Body&gt;
+        Here is my mail body.
+      &lt;/Body&gt;
+      &lt;Attachments&gt;
+        &lt;File path="C:\MyFileToSend.txt" /&gt;
+        &lt;File path="C:\My2ndAttachment.txt" /&gt;
+        &lt;SqlQuery database="1" dataFormat="csv|json|xml"&gt;
+          select t.id, t.total, t.date from orders t where t.date>=cast(getdate() as date)
+        &lt;/SqlQuery&gt;
+      &lt;/Attachments&gt;
+    &lt;/Mail&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="ForEach">ForEach</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Loop throught the rows in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; ForEach<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;ForEach itemFrom="users_list" where="" sort="" parallel="1"&gt;
+      &lt;Log&gt;User Name: {users_list.name}.&lt;/Log&gt;
+    &lt;/ForEach&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Log">Log</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Write a new line to the previously specified log file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Log<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Log&gt;Hello World!&lt;/Log&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Sleep">Sleep</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Block the current thread for the specified time.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Sleep<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Sleep time="30 seconds" /&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Exception">Exception</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Throw a new exception.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Exception<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Exception assembly="" type="System.Exception" message="Oh no, something is wrong!" /&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Try">Try</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<p>Try to run some commands for the specified retry times.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Try<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Try retry="3" sleep="40 seconds"&gt;
+      &lt;Catch&gt;
+        &lt;Exception type="System.Net.WebException" withMessage="(409) Conflict" /&gt;
+        &lt;Exception type="Microsoft.WindowsAzure.Storage.StorageException" withMessage="(409) Conflict" /&gt;
+      &lt;/Catch&gt;
+      &lt;Execute&gt;
+        &lt;Log&gt;The commands to run are here!&lt;/Log&gt;
+      &lt;/Execute&gt;
+      &lt;Fail&gt;
+        &lt;Log&gt;Command failed :(&lt;/Log&gt;
+      &lt;/Fail&gt;
+    &lt;/Try&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Csv">Csv</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="CsvWriteLine">WriteLine</h4>
+				<p>Write a new line in the specified csv file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Csv &gt; WriteLine<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Csv path="C:\MyFile.csv" separator=";"&gt;
+      &lt;WriteLine append="false"&gt;
+        &lt;Column&gt;id&lt;/Column&gt;
+        &lt;Column&gt;name&lt;/Column&gt;
+        &lt;Column&gt;email&lt;/Column&gt;
+      &lt;/WriteLine&gt;
+    &lt;/Csv&gt;
+    &lt;ForEach itemFrom="users_list"&gt;
+      &lt;Csv path="C:\MyFile.csv" separator=";"&gt;
+        &lt;WriteLine append="true"&gt;
+          &lt;Column&gt;{users_list.id}&lt;/Column&gt;
+          &lt;Column&gt;{users_list.name}&lt;/Column&gt;
+          &lt;Column&gt;{users_list.email}&lt;/Column&gt;
+        &lt;/WriteLine&gt;
+      &lt;/Csv&gt;
+    &lt;/ForEach&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="CsvWriteData">WriteData</h4>
+				<p>Write the datatable to the specified csv file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Csv &gt; WriteData<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Csv path="C:\MyFile.csv" separator=";"&gt;
+      &lt;WriteData data="users_list" where="" append="false"&gt;
+        &lt;Column header="id"&gt;{users_list.id}&lt;/Column&gt;
+        &lt;Column header="name"&gt;{users_list.name}&lt;/Column&gt;
+        &lt;Column header="email"&gt;{users_list.email}&lt;/Column&gt;
+      &lt;/WriteLine&gt;
+    &lt;/Csv&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="CsvLoad">Load</h4>
+				<p>Load the specified csv file to a new datatable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Csv &gt; Load<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Csv path="C:\MyFile.csv" separator=";"&gt;
+      &lt;Load to="users_list" where="" hasHeaders="true" /&gt;
+    &lt;/Csv&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="DataTable">DataTable</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="DataTableCount">Count</h4>
+				<p>Count the rows found in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Count<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Count data="users_list" where="" to="users_count" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableSum">Sum</h4>
+				<p>Sum values from the rows in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Sum<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Sum data="products_list" column="total" where="" to="total_products" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableAvg">Avg</h4>
+				<p>Calculate the average values from the rows in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Avg<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Avg data="products_list" column="price" where="" to="avg_price" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableMin">Min</h4>
+				<p>Get the min value from the rows in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Min<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Min data="products_list" column="price" where="" to="min_price" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableMax">Max</h4>
+				<p>Get the max value from the rows in the specified table.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Max<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Max data="products_list" column="price" where="" to="max_price" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableSetRowValue">SetRowValue</h4>
+				<p>Set values on the specified columns/rows.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; SetRowValue<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;SetRowValue data="users_list" where=""&gt;
+        &lt;Column name="is_active" value="1" /&gt;
+      &lt;/SetRowValue&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableGetDataRow">GetDataRow</h4>
+				<p>Find the rows that matches the where condition and set one of them to the specified variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; GetDataRow<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;GetDataRow fromData="users_list" to="user_row" where="id={orders.id_user}" index="0" /&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableDiff">Diff</h4>
+				<p>.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Diff<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;Diff inData="blobs_list1" notInData="blobs_list2" columns="blob_container, blob_name, blob_content_md5" to="new_blobs_list" /&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableJoin">Join</h4>
+				<p>.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Join<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;Join data="blobs_list1, blobs_list2" to="all_blobs_list" /&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableIntersect">Intersect</h4>
+				<p>.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; Intersect<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;Intersect data="blobs_list1, blobs_list2" columns="blob_name" rowsFrom="0" to="new_blobs_list" /&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableRemoveRows">RemoveRows</h4>
+				<p>.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; RemoveRows<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;RemoveRows from="users_list" where="is_active=0" /&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="DataTableInsertRow">InsertRow</h4>
+				<p>.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; DataTable &gt; InsertRow<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;DataTable&gt;
+      &lt;InsertRow to="files_list"&gt;
+        &lt;Column name="id" type="int"&gt;1&lt;/Column&gt;
+        &lt;Column name="name" type="string"&gt;Test User&lt;/Column&gt;
+        &lt;Column name="email" type="string"&gt;testuser@company.com&lt;/Column&gt;
+      &lt;/InsertRow&gt;
+    &lt;/DataTable&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="SetValue">SetValue</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="SetValueCalc">Calc</h4>
+				<p>Execute a simple operation using the specified values.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Calc<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Calc operation="+|-|*|/" value1="2" value2="3" to="my_calc" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="SetValueCalcDate">CalcDate</h4>
+				<p>Execute a date operation using the specified values.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; CalcDate<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;CalcDate to="limit_date" value="{today}" add="-6 months" operation="-|+" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="SetValueString">String</h4>
+				<p>Set the value to the specified string variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; String<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;String value="User Name: {users_list.name}" to="user_name" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="SetValueDate">Date</h4>
+				<p>Set the date/time value to the specified variable.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; SetValue &gt; Date<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;SetValue&gt;
+      &lt;Date value="{now}" to="start_date" /&gt;
+    &lt;/SetValue&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+		<h3 id="LocalDisk">LocalDisk</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="LocalDiskListFiles">ListFiles</h4>
+				<p>Query files from a folder. The returned datatable contains the columns:
+				<ul>
+					<li>full_path (string)</li>
+					<li>directory (string)</li>
+					<li>filename (string)</li>
+					<li>extension (string)</li>
+					<li>creation_time (DateTime)*</li>
+					<li>last_write_time (DateTime)*</li>
+					<li>length (long)*</li>
+				</ul>
+				* The columns creation_time, last_write_time and length will only be filled if the parameter "fetchAttributes" is set to "true".</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; ListFiles<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;ListFiles to="files_list" path="C:\MyFolder" searchPattern="*.*" allDirectories="false" fetchAttributes="false" where="" sort="" regex="" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="LocalDiskMoveFile">MoveFile</h4>
+				<p>Change the name from the specified file or move it to another parent folder.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; MoveFile<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;MoveFile path="C:\MyFile1.txt" to="C:\Folder\MyMovedFile.txt" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="LocalDiskMoveFolder">MoveFolder</h4>
+				<p>Change the name from the specified folder or move it to another parent folder.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; MoveFolder<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;MoveFolder path="C:\MyFolder1" to="C:\Folder\MyMovedFolder" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="LocalDiskCopyFile">CopyFile</h4>
+				<p>Copy the specified file to another file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; CopyFile<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;CopyFile path="C:\MyFile1.txt" to="C:\Folder\MyFileCopy.txt" overwrite="true" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="LocalDiskDeleteFile">DeleteFile</h4>
+				<p>Delete the specified file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; DeleteFile<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;DeleteFile path="C:\MyFile1.txt" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="LocalDiskDeleteFolder">DeleteFolder</h4>
+				<p>Delete the specified file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; LocalDisk &gt; DeleteFolder<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;LocalDisk&gt;
+      &lt;DeleteFolder path="C:\MyFolder" recursive="false" /&gt;
+    &lt;/LocalDisk&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+		<h3 id="Storage">Storage</h3>
+		<section class="tag1">
+			<section class="tag2">
+				<h4 id="StorageUpload">Upload</h4>
+				<p>Upload a file to the specified Azure storage account.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Storage &gt; Upload<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Storage id="1"&gt;
+      &lt;Upload file="C:\MyFile_{now:yyyy-MM-dd}.csv" toBlob="backups/Backup_{now:yyyy-MM-dd}/MyFile.csv" deleteSource="true" async="true" /&gt;
+    &lt;/Storage&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="StorageDownload">Download</h4>
+				<p>Download the specified file.</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Storage &gt; Download<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Storage id="1"&gt;
+      &lt;Download blob="my_container/myblob.txt" toFile="C:\MyFile.txt" snapshotTime="" /&gt;
+    &lt;/Storage&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+
+			<section class="tag2">
+				<h4 id="StorageListBlobs">ListBlobs</h4>
+				<p>Query blobs and set the resulting list to a variable. The returned datatable contains the columns:
+				<ul>
+					<li>blob_name (string)</li>
+					<li>blob_extension (string)</li>
+					<li>blob_container (string)</li>
+					<li>blob_uri (string)</li>
+					<li>blob_length (long)</li>
+					<li>blob_last_modified (DateTime)</li>
+					<li>blob_content_type (string)</li>
+					<li>blob_content_md5 (string)</li>
+					<li>blob_is_snapshot (bool)</li>
+					<li>blob_snapshot_time (DateTime)</li>
+					<li>metadata_name1 (string)*</li>
+					<li>metadata_name2 (string)*</li>
+				</ul>
+				* The columns with the name starting with "metadata_" will only be filled with the blob metadata if the parameter "details" contains the option "metadata" or the parameter "fetchAttributes" is set to "true".
+				</p>
+				<span class="label label-primary">Tag Location:</span> Configuration &gt; Execute &gt; Storage &gt; ListBlobs<br />
+				<pre class="prettyprint">
+&lt;?xml version="1.0" encoding="utf-16" ?&gt;
+&lt;Configuration&gt;
+  &lt;Execute&gt;
+    &lt;Storage id="1"&gt;
+      &lt;ListBlobs to="blobs_list" container="container{now:yyyyMM}" prefix="" fetchAttributes="false" details="none|snapshots|metadata" where="" sort="" regex="" /&gt;
+    &lt;/Storage&gt;
+  &lt;/Execute&gt;
+&lt;/Configuration&gt;</pre>
+			</section>
+		</section>
+
+</div>
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/lodash/4.16.4/lodash.min.js"></script>
+	<script type="text/javascript">
+		var MyFunctions={
+			topH3:null,
+			onScroll:function(){
+				var me=this;
+				var lst=$('h3');
+				var top=$('body').scrollTop();
+				var lstTopH3=_.filter(lst,function(el){el=$(el);return el.offset().top<top-35});
+				var h3=$(_.maxBy(lstTopH3,function(el){return $(el).offset().top}));
+				if(h3.length && me.topH3<=top && h3.offset().top<=me.topH3)return;
+				var lstFixed=lst.siblings('.fixed');
+				_.forEach(lstFixed,function(el){if(el!=h3[0])$(el).removeClass('fixed')});
+				if(h3 && h3.length && !h3.hasClass('fixed')){
+					me.topH3=h3.offset().top;
+					h3.addClass('fixed');
+				}
+			}
+		};
+		$(window).scroll(MyFunctions.onScroll);
+	</script>
+</body>
+</html>
