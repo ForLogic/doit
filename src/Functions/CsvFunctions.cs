@@ -43,7 +43,7 @@ namespace DoIt.Functions
 			using (var fw = new FileStream(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write))
 			using (var sw = new StreamWriter(fw, Encoding.Default)){
 				for (var x=0; x<lstColumns.Length; x++){
-					sw.Write("\""+ Program.Shared.ReplaceTags(lstColumns[x]).Replace("\"","\"\"")+"\"");
+					sw.Write("\""+ (Program.Shared.ReplaceTags(lstColumns[x]) ?? "").Replace("\"","\"\"")+"\"");
 					if (x < lstColumns.Length - 1)
 						sw.Write(separator);
 				}
