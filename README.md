@@ -259,7 +259,7 @@ Execute SQL commands.
 <Configuration>
   <Execute>
     <Sql database="1">
-      <Execute>insert into backups (start_date) values (getdate())</Execute>
+      <Execute timeout="30">insert into backups (start_date) values (getdate())</Execute>
     </Sql>
   </Execute>
 </Configuration>
@@ -274,7 +274,7 @@ Execute SQL queries and set the results to the specified variable.
 <Configuration>
   <Execute>
     <Sql database="1">
-      <Select to="users_table">
+      <Select to="users_table" timeout="30">
         select us.id, us.name, us.email from users us where us.removed=0
       </Select>
     </Sql>
@@ -291,7 +291,7 @@ Execute the SQL command/query and set the result to the specified variable.
 <Configuration>
   <Execute>
     <Sql database="1">
-      <Scalar to="user_id">
+      <Scalar to="user_id" timeout="30">
         select us.id from users us where us.email='user@mycompany.com'
       </Scalar>
     </Sql>
