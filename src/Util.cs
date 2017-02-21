@@ -388,43 +388,56 @@ namespace DoIt
 		}
 
 		#region database helpers
-		public static DataTable Select(string sql, string dbConnectionString)
+		public static DataTable Select(string sql, string dbConnectionString, Int32? commandTimeout = null)
 		{
 			Console.WriteLine("SQL: " + sql);
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
 				var dt = new DataTable();
-				using (var da = new SqlDataAdapter(sql, dbConnectionString))
-					da.Fill(dt);
-				return dt;
+				using (var cmd = new SqlCommand(sql, conn)){
+					if (commandTimeout != null)
+						cmd.CommandTimeout = commandTimeout.Value;
+					using (var da = new SqlDataAdapter(cmd))
+						da.Fill(dt);
+					return dt;
+				}
 			}
 		}
 
-		public static DataTable Select(string sql, SqlTransaction transaction)
+		public static DataTable Select(string sql, SqlTransaction transaction, Int32? commandTimeout = null)
 		{
 			Console.WriteLine("SQL: " + sql);
 			var dt = new DataTable();
-			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction))
-			using (var da = new SqlDataAdapter(cmd))
-				da.Fill(dt);
+			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
+				if (commandTimeout != null)
+					cmd.CommandTimeout = commandTimeout.Value;
+				using (var da = new SqlDataAdapter(cmd))
+					da.Fill(dt);
+			}
 			return dt;
 		}
 
-		public static object Scalar(string sql, string dbConnectionString)
+		public static object Scalar(string sql, string dbConnectionString, Int32? commandTimeout = null)
 		{
 			Console.WriteLine("SQL: " + sql);
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
-				using (var cmd = new SqlCommand(sql, conn))
+				using (var cmd = new SqlCommand(sql, conn)){
+					if (commandTimeout != null)
+						cmd.CommandTimeout = commandTimeout.Value;
 					return cmd.ExecuteScalar();
+				}
 			}
 		}
 
-		public static object Scalar(string sql, SqlTransaction transaction)
+		public static object Scalar(string sql, SqlTransaction transaction, Int32? commandTimeout = null)
 		{
 			Console.WriteLine("SQL: " + sql);
-			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction))
+			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
+				if (commandTimeout != null)
+					cmd.CommandTimeout = commandTimeout.Value;
 				return cmd.ExecuteScalar();
+			}
 		}
 
 		public static int Execute(string sql, string dbConnectionString, Int32? commandTimeout = null)
@@ -433,7 +446,7 @@ namespace DoIt
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
 				using (var cmd = new SqlCommand(sql, conn)){
-					if (commandTimeout != null && commandTimeout.Value != 0)
+					if (commandTimeout != null)
 						cmd.CommandTimeout = commandTimeout.Value;
 					return cmd.ExecuteNonQuery();
 				}
@@ -444,7 +457,7 @@ namespace DoIt
 		{
 			Console.WriteLine("SQL: " + sql);
 			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
-				if (commandTimeout != null && commandTimeout.Value != 0)
+				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
 				return cmd.ExecuteNonQuery();
 			}

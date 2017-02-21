@@ -27,11 +27,11 @@ namespace DoIt.Functions
 					foreach (XmlNode n in lstNodes){
 						var tagName = String.IsNullOrWhiteSpace(n.Name) ? null : n.Name.ToLower();
 						if(tagName == "execute"){
-							var timeout = Util.GetStr(n, "timeout", "0").IsNumber() ? Convert.ToInt32(Util.GetStr(n, "timeout", "0")) : 0;
 							var to = Util.GetStr(n, "to");
 							var sql = Program.Shared.ReplaceTags(n.InnerText);
+							var timeout = Util.GetStr(n, "timeout");
 							Program.Shared.WriteLogLine("SQL Execute: {0}", sql);
-							var rows = Util.Execute(sql, trans, timeout);
+							var rows = Util.Execute(sql, trans, string.IsNullOrEmpty(timeout)||!timeout.IsMatch("\\d+")?null:new Nullable<int>(Convert.ToInt32(timeout)));
 							commit = true;
 							if (!string.IsNullOrEmpty(to))
 								lock (Program.Shared.LockVariables){
@@ -41,8 +41,9 @@ namespace DoIt.Functions
 						}else if(tagName == "scalar"){
 							var sql = Program.Shared.ReplaceTags(n.InnerText);
 							var to = Util.GetStr(n, "to");
+							var timeout = Util.GetStr(n, "timeout");
 							Program.Shared.WriteLogLine("SQL Scalar: {0}", sql);
-							var obj = Util.Scalar(sql, trans);
+							var obj = Util.Scalar(sql, trans, string.IsNullOrEmpty(timeout)||!timeout.IsMatch("\\d+")?null:new Nullable<int>(Convert.ToInt32(timeout)));
 							commit = true;
 							lock (Program.Shared.LockVariables){
 								Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = obj;
@@ -51,8 +52,9 @@ namespace DoIt.Functions
 						}else if(tagName == "select"){
 							var sql = Program.Shared.ReplaceTags(n.InnerText);
 							var to = Util.GetStr(n, "to");
+							var timeout = Util.GetStr(n, "timeout");
 							Program.Shared.WriteLogLine("SQL Select: {0}", sql);
-							var dt = Util.Select(sql, trans);
+							var dt = Util.Select(sql, trans, string.IsNullOrEmpty(timeout)||!timeout.IsMatch("\\d+")?null:new Nullable<int>(Convert.ToInt32(timeout)));
 							lock (Program.Shared.LockDataTables){
 								Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = dt;
 							}

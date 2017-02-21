@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ForLogic Software")]
 [assembly: AssemblyProduct("DoIt")]
-[assembly: AssemblyCopyright("© ForLogic Software 2016")]
+[assembly: AssemblyCopyright("© ForLogic Software 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2016.10.31.0")]
-[assembly: AssemblyFileVersion("2016.10.31.0")]
+[assembly: AssemblyVersion("2017.02.21.0")]
+[assembly: AssemblyFileVersion("2017.02.21.0")]
