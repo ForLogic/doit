@@ -145,10 +145,11 @@ namespace DoIt.Functions
 			var fromData = Util.GetStr(n, "fromData");
 			var to = Util.GetStr(n, "to");
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
+			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
 			var index = Util.GetStr(n, "index", "0");
 			var lst = new Dictionary<string, object>();
 			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), fromData);
-			var rows = dt.Select(where);
+			var rows = dt.Select(where, sort);
 			var x = index.ToLower() == "last" ? rows.Length - 1 : Convert.ToInt32(index);
 			var r = rows.Length == 0 || x > rows.Length - 1 ? null : rows[x];
 			foreach (DataColumn c in dt.Columns)
@@ -289,13 +290,14 @@ namespace DoIt.Functions
 				return;
 			var to = Util.GetStr(n, "to", data);
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
+			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
 			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
 			if (dt == null)
 				return;
 			var newDT = new DataTable();
 			foreach (DataColumn c in dt.Columns)
 				newDT.Columns.Add(c.ColumnName, c.DataType);
-			var lstRows = string.IsNullOrEmpty(where)?dt.Rows.Cast<DataRow>().ToArray():dt.Select(where);
+			var lstRows = dt.Select(where, sort);
 			foreach (var r in lstRows)
 				newDT.Rows.Add(r.ItemArray);
 			lock (Program.Shared.LockDataTables){

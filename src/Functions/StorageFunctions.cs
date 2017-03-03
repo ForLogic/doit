@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
+using static DoIt.Program;
 
 namespace DoIt.Functions
 {
@@ -23,8 +24,8 @@ namespace DoIt.Functions
 			if (Node == null)
 				return false;
 			var id = Util.GetStr(Node, "id");
-			if (string.IsNullOrEmpty(id))
-				return false;
+			//if (string.IsNullOrEmpty(id))
+			//	return false;
 			var lstNodes = Util.GetChildNodes(Node, "Upload", "Download", "ListBlobs", "Copy", "SetMetadata", "Snapshot", "DeleteBlobs", "DeleteSnapshot", "DeleteContainers");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
@@ -86,19 +87,29 @@ namespace DoIt.Functions
 		// download
 		void Download(string id, XmlNode n){
 			var blobName = Program.Shared.ReplaceTags(Util.GetStr(n, "blob"));
+			var blobUri = Program.Shared.ReplaceTags(Util.GetStr(n, "uri"));
 			var toFile = Program.Shared.ReplaceTags(Util.GetStr(n, "toFile"));
+			var sas = Program.Shared.ReplaceTags(Util.GetStr(n, "sharedAccessSignature"));
 			var snapshotTime = Util.ParseDateTime(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime")));
-			var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
-			var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
-			var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1), snapshotTime);
-			if (blob.Exists())
-				blob.DownloadToFile(toFile, FileMode.Create);
+			if(!string.IsNullOrEmpty(blobName)){
+				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
+				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
+				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1) + (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null), snapshotTime);
+				if (blob.Exists())
+					blob.DownloadToFile(toFile, FileMode.Create);
+			}
+			if(!string.IsNullOrEmpty(blobUri)){
+				var blob = new CloudBlob(new Uri(blobUri+ (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null);
+				if (blob.Exists())
+					blob.DownloadToFile(toFile, FileMode.Create);
+			}
 		}
 
 		// list blobs
 		void ListBlobs(string id, XmlNode n){
 			var to = Util.GetStr(n, "to");
 			var container = Program.Shared.ReplaceTags(Util.GetStr(n, "container"));
+			var uri = Program.Shared.ReplaceTags(Util.GetStr(n, "uri"));
 			var prefix = Program.Shared.ReplaceTags(Util.GetStr(n, "prefix"));
 			var fetchAttributes = Util.GetStr(n, "fetchAttributes", "false").ToLower() == "true";
 			var details = Util.GetEnumValue<BlobListingDetails>(Util.GetStr(n, "details", "none"), BlobListingDetails.None);
@@ -106,9 +117,18 @@ namespace DoIt.Functions
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
 			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
 			var regex = Program.Shared.ReplaceTags(Util.GetStr(n, "regex"));
-			var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
-			var blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container);
-			var lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
+			var sas = Program.Shared.ReplaceTags(Util.GetStr(n, "sharedAccessSignature"));
+			var lst = null as CloudBlob[];
+			var blobClient = null as CloudBlobClient;
+			var blobContainer = null as CloudBlobContainer;
+			if (string.IsNullOrEmpty(uri)){
+				blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
+				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null));
+				lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
+			} else {
+				blobContainer = new CloudBlobContainer(new Uri(uri + (Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)));
+				lst = blobContainer.ListBlobs(prefix, flat, details).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
+			}
 			if (!string.IsNullOrEmpty(regex))
 				lst = lst.Where(b => Regex.IsMatch(b.Uri.PathAndQuery, regex)).ToArray();
 			var lstMetadata = Util.GetChildNodes(n, "Metadata").Select(n2 => new { Name = Util.GetStr(n2, "name"), Type = Util.GetStr(n2, "type"), Format = n2.InnerXml }).Where(m => !string.IsNullOrEmpty(m.Name) && !string.IsNullOrEmpty(m.Type)).ToArray();

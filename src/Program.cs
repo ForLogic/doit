@@ -52,7 +52,7 @@ namespace DoIt
 				var lstConnStrNode = xml.SelectNodes("Configuration/Settings/ConnectionStrings");
 				if (lstConnStrNode != null)
 					foreach(XmlNode connStrNode in lstConnStrNode){
-						foreach (XmlElement n in Util.GetChildNodes(connStrNode, "Database", "Storage", "MailServer"))
+						foreach (XmlElement n in Util.GetChildNodes(connStrNode, "Database", "Storage", "MailServer", "SharedAccessSignature"))
 							if (!string.IsNullOrEmpty(n.InnerXml)){
 								if (!string.IsNullOrEmpty(encryptionKey) && Util.GetStr(n, "encrypted", "false").ToLower() != "true"){
 									n.InnerXml = System.Security.SecurityElement.Escape(n.InnerXml.Encrypt(encryptionKey));
@@ -117,11 +117,12 @@ namespace DoIt
 			// settings: connectionStrings
 			var connectionStrings = Util.GetChildNode(settingsNode, "ConnectionStrings");
 			if (connectionStrings != null)
-				foreach (XmlNode n in Util.GetChildNodes(connectionStrings, "Database", "Storage", "MailServer")){
+				foreach (XmlNode n in Util.GetChildNodes(connectionStrings, "Database", "Storage", "MailServer", "SharedAccessSignature")){
 					switch (n.Name.ToLower()){
 						case "database": Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
 						case "storage": Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
 						case "mailserver": Shared.MailServers[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
+						case "sharedaccesssignature": Shared.SharedAccessSignatures[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
 					}
 				}
 
@@ -182,6 +183,7 @@ namespace DoIt
 			public static Dictionary<String, String> Storages { get; set; }
 			public static Dictionary<String, String> Databases { get; set; }
 			public static Dictionary<String, String> MailServers { get; set; }
+			public static Dictionary<String, String> SharedAccessSignatures { get; set; }
 			public static List<String> DbBackups { get; set; }
 			public static List<String> ZipFiles { get; set; }
 			public static List<string> Emails { get; set; }
@@ -204,6 +206,7 @@ namespace DoIt
 				Storages = new Dictionary<String, String>();
 				Databases = new Dictionary<String, String>();
 				MailServers = new Dictionary<String, String>();
+				SharedAccessSignatures = new Dictionary<String, String>();
 				DbBackups = new List<String>();
 				ZipFiles = new List<String>();
 				DataTables = new Dictionary<String, DataTable>();
