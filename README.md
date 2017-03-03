@@ -3,6 +3,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
 
 ## Index
 1. [The Configuration File](#TheConfigurationFile)
+    1. [Encryption](#TheConfigurationFileEncryption)
 2. [Settings](#Settings)
     1. [LogFile](#SettingsLogFile)
     2. [Exceptions](#SettingsExceptions)
@@ -46,6 +47,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
         * [Intersect](#ExecuteDataTableIntersect)
         * [RemoveRows](#ExecuteDataTableRemoveRows)
         * [InsertRow](#ExecuteDataTableInsertRow)
+        * [Filter](#ExecuteDataTableFilter)
     13. [SetValue](#ExecuteSetValue)
         * [Calc](#ExecuteSetValueCalc)
         * [CalcDate](#ExecuteSetValueCalcDate)
@@ -79,7 +81,20 @@ If you want to use another configuration file you can use:
 C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml"
 ```
 
-Below you can see how to prepare the configuration file.
+### <a id="TheConfigurationFileEncryption">Encryption</a>
+You can encrypt/decrypt the connection strings from the configuration file using the following commands:
+```shell
+C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml" /encryptionKey="test123"
+Configuration file was encrypted.
+
+C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml" /decryptionKey="test123"
+Configuration file was decrypted.
+```
+
+To use an encrypted configuration file without decrypting it, you should use the following command:
+```shell
+C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml" /cryptKey="test123"
+```
 
 ## <a id="Settings">Settings</a>
 
@@ -648,6 +663,21 @@ Insert a new row in the specified datatable.
         <Column name="name" type="string">Test User</Column>
         <Column name="email" type="string">testuser@company.com</Column>
       </InsertRow>
+    </DataTable>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteDataTableFilter">Filter</a>
+Filter rows in the specified datatable.
+
+*Tag Location: Configuration > Execute > DataTable > Filter*
+```html
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <DataTable>
+      <Filter data="users_list" where="is_active=1" to="active_users_list" />
     </DataTable>
   </Execute>
 </Configuration>
