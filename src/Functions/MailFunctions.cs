@@ -11,6 +11,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using static DoIt.Program;
 
 namespace DoIt.Functions
 {
@@ -20,8 +21,14 @@ namespace DoIt.Functions
 
 		public override bool Execute()
 		{
-			var smtp = Util.GetStr(Node, "smtp");
-			if (String.IsNullOrEmpty(smtp))
+			var smtp1 = Util.GetStr(Node, "smtp");
+			var smtp2 = Util.GetStr(Node, "server");
+			var smtp = "";
+			if (!string.IsNullOrEmpty(smtp1))
+				smtp = smtp1;
+			else if (!string.IsNullOrEmpty(smtp2) && Shared.MailServers.ContainsKey(smtp2))
+				smtp = Shared.MailServers[smtp2];
+			if (string.IsNullOrEmpty(smtp))
 				return false;
 			var to = Util.GetStr(Node, "to");
 			var host = Util.GetConfigData(smtp, "host");

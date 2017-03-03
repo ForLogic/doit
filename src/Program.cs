@@ -30,6 +30,7 @@ namespace DoIt
 
 			// load xml
 			var xml = Shared.Document = new XmlDocument();
+			xml.PreserveWhitespace = true;
 			xml.Load(configFile);
 			var configNode = Util.GetChildNode(xml, "Configuration");
 			if (configNode == null){
@@ -42,8 +43,8 @@ namespace DoIt
 			LoadSettings(configNode, cryptKey);
 
 			var version = Assembly.GetExecutingAssembly().GetName().Version;
-			var user = System.Security.Principal.WindowsIdentity.GetCurrent();
-			var process = System.Diagnostics.Process.GetCurrentProcess();
+			var user = WindowsIdentity.GetCurrent();
+			var process = Process.GetCurrentProcess();
 			var encryptionKey = Util.GetArg(args, "encryptionKey");
 			var decryptionKey = Util.GetArg(args, "decryptionKey");
 			if (!string.IsNullOrEmpty(encryptionKey) || !string.IsNullOrEmpty(decryptionKey)){
@@ -51,7 +52,7 @@ namespace DoIt
 				var lstConnStrNode = xml.SelectNodes("Configuration/Settings/ConnectionStrings");
 				if (lstConnStrNode != null)
 					foreach(XmlNode connStrNode in lstConnStrNode){
-						foreach (XmlElement n in Util.GetChildNodes(connStrNode, "Database", "Storage"))
+						foreach (XmlElement n in Util.GetChildNodes(connStrNode, "Database", "Storage", "MailServer"))
 							if (!string.IsNullOrEmpty(n.InnerXml)){
 								if (!string.IsNullOrEmpty(encryptionKey) && Util.GetStr(n, "encrypted", "false").ToLower() != "true"){
 									n.InnerXml = System.Security.SecurityElement.Escape(n.InnerXml.Encrypt(encryptionKey));
@@ -63,7 +64,14 @@ namespace DoIt
 								}
 							}
 				}
-				Shared.WriteLogLine("Saving config file.");
+				if (!string.IsNullOrEmpty(encryptionKey)){
+					Shared.WriteLogLine("Configuration file was encrypted.");
+					Console.WriteLine("Configuration file was encrypted.");
+				}
+				if (!string.IsNullOrEmpty(decryptionKey)){
+					Shared.WriteLogLine("Configuration file was decrypted.");
+					Console.WriteLine("Configuration file was decrypted.");
+				}
 				xml.Save(configFile);
 				LogEnd(args, process, version, user);
 				return;
@@ -106,25 +114,31 @@ namespace DoIt
 					Directory.CreateDirectory(Path.GetDirectoryName(Shared.LogFile));
 			}
 
+			// settings: connectionStrings
+			var connectionStrings = Util.GetChildNode(settingsNode, "ConnectionStrings");
+			if (connectionStrings != null)
+				foreach (XmlNode n in Util.GetChildNodes(connectionStrings, "Database", "Storage", "MailServer")){
+					switch (n.Name.ToLower()){
+						case "database": Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
+						case "storage": Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
+						case "mailserver": Shared.MailServers[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
+					}
+				}
+
 			// settings: exceptions
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 			var exceptions = Util.GetChildNode(settingsNode, "Exceptions");
 			if (exceptions != null){
-				Shared.Smtp = Util.GetStr(exceptions, "smtp");
+				var smtp1 = Util.GetStr(exceptions, "smtp");
+				var smtp2 = Util.GetStr(exceptions, "mailServer");
+				if (!string.IsNullOrEmpty(smtp1))
+					Shared.Smtp = smtp1;
+				else if (!string.IsNullOrEmpty(smtp2) && Shared.MailServers.ContainsKey(smtp2))
+					Shared.Smtp = Shared.MailServers[smtp2];
 				Shared.AttachLogFile = Util.GetStr(exceptions, "attachLogFile") == "true";
 				foreach (XmlNode n in exceptions.SelectNodes("Mail"))
 					Shared.Emails.Add(n.InnerText);
 			}
-
-			// settings: connectionStrings
-			var connectionStrings = Util.GetChildNode(settingsNode, "ConnectionStrings");
-			if (connectionStrings != null)
-				foreach (XmlNode n in connectionStrings.ChildNodes){
-					if(n.Name.ToLower()=="database")
-						Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey);
-					else if(n.Name.ToLower()=="storage")
-						Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey);
-				}
 		}
 
 		static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -167,6 +181,7 @@ namespace DoIt
 			public static bool AttachLogFile { get; set; }
 			public static Dictionary<String, String> Storages { get; set; }
 			public static Dictionary<String, String> Databases { get; set; }
+			public static Dictionary<String, String> MailServers { get; set; }
 			public static List<String> DbBackups { get; set; }
 			public static List<String> ZipFiles { get; set; }
 			public static List<string> Emails { get; set; }
@@ -188,6 +203,7 @@ namespace DoIt
 				Emails = new List<String>();
 				Storages = new Dictionary<String, String>();
 				Databases = new Dictionary<String, String>();
+				MailServers = new Dictionary<String, String>();
 				DbBackups = new List<String>();
 				ZipFiles = new List<String>();
 				DataTables = new Dictionary<String, DataTable>();
