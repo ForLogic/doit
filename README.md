@@ -6,8 +6,8 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
     1. [Encryption](#TheConfigurationFileEncryption)
 2. [Settings](#Settings)
     1. [LogFile](#SettingsLogFile)
-    2. [Exceptions](#SettingsExceptions)
-    3. [ConnectionStrings](#SettingsConnectionStrings)
+    2. [ConnectionStrings](#SettingsConnectionStrings)
+    3. [Exceptions](#SettingsExceptions)
 3. [Execute Commands](#ExecuteCommands)
     1. [Database](#ExecuteDatabase)
         * [Backup](#ExecuteDatabaseBackup)
@@ -111,21 +111,6 @@ Use this tag to specify the log path and variable.
 </Configuration>
 ```
 
-### <a id="SettingsExceptions">Exceptions</a>
-Use this tag to mail users if an exception occurs.
-
-*Tag Location: Configuration > Settings > Exceptions*
-```html
-<?xml version="1.0" encoding="utf-16" ?>
-<Configuration>
-  <Settings>
-    <Exceptions smtp="host=smtp.company.com; user=mail_user@company.com; pass=abc123; port=587; ssl=true; from=mail_user@company.com;" attachLogFile="true">
-      <Mail>admin@company.com</Mail>
-    </Exceptions>
-  </Settings>
-</Configuration>
-```
-
 ### <a id="SettingsConnectionStrings">ConnectionStrings</a>
 This tag set database and azure storage account connection strings.
 
@@ -137,10 +122,27 @@ This tag set database and azure storage account connection strings.
     <ConnectionStrings>
       <Database id="1">Data Source=localhost\sql2016express; Initial Catalog=database; Integrated Security=false; User Id=sa; Password=123;</Database>
       <Storage id="1">DefaultEndpointsProtocol=https;AccountName=my_account;AccountKey=871oQKMifslemflIwq54e0fd8sJskdmw98348dMF0suJ0WODK73lMlwiehf34u0mm5ez6MdiewklFH3/w2/IEK==</Storage>
+      <MailServer id="1">host=smtp.domain.com; from=user@domain.com; port=587; ssl=true; user=user@domain.com; pass=123;</MailServer>
     </ConnectionStrings>
   </Settings>
 </Configuration>
 ```
+
+### <a id="SettingsExceptions">Exceptions</a>
+Use this tag to mail users if an exception occurs.
+
+*Tag Location: Configuration > Settings > Exceptions*
+```html
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Settings>
+    <Exceptions mailServer="1" attachLogFile="true">
+      <Mail>admin@company.com</Mail>
+    </Exceptions>
+  </Settings>
+</Configuration>
+```
+
 ## <a id="ExecuteCommands">Execute Commands</a>
 
 ### <a id="ExecuteDatabase">Database</a>
@@ -322,7 +324,7 @@ Send an e-mail.
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
-    <Mail smtp="host=smtp.domain.com; from=user@domain.com; port=587; ssl=true; user=user@domain.com; pass=123;" to="other_user@domain.com" subject="Hello World">
+    <Mail server="1" to="other_user@domain.com" subject="Hello World">
       <Body>
         Here is my mail body.
       </Body>
