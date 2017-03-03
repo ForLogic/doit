@@ -31,6 +31,7 @@ namespace DoIt.Functions
 					case "intersect": Intersect(n); break;
 					case "removerows": RemoveRows(n); break;
 					case "insertrow": InsertRow(n); break;
+					case "filter": Filter(n); break;
 				}
 			return true;
 		}
@@ -279,6 +280,27 @@ namespace DoIt.Functions
 				r[c.Name] = Util.GetValue(c.Value, c.Type);
 			}
 			dt.Rows.Add(r);
+		}
+
+		// filter rows
+		void Filter(XmlNode n){
+			var data = Util.GetStr(n, "data");
+			if (string.IsNullOrEmpty(data))
+				return;
+			var to = Util.GetStr(n, "to", data);
+			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
+			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
+			if (dt == null)
+				return;
+			var newDT = new DataTable();
+			foreach (DataColumn c in dt.Columns)
+				newDT.Columns.Add(c.ColumnName, c.DataType);
+			var lstRows = string.IsNullOrEmpty(where)?dt.Rows.Cast<DataRow>().ToArray():dt.Select(where);
+			foreach (var r in lstRows)
+				newDT.Rows.Add(r.ItemArray);
+			lock (Program.Shared.LockDataTables){
+				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = dt;
+			}
 		}
 	}
 }

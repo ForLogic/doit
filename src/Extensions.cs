@@ -190,6 +190,18 @@ namespace DoIt
 			return true;
 		}
 
+		public static string Encrypt(this string plainText, string key)
+		{
+			var r = new RijndaelEnhanced(key);
+			return r.Encrypt(plainText);
+		}
+
+		public static string Decrypt(this string cipherText, string key)
+		{
+			var r = new RijndaelEnhanced(key);
+			return r.Decrypt(cipherText);
+		}
+
 		#region datatable serializers
 		static DataColumn[] GetColumns(DataTable dt, params string[] columns)
 		{

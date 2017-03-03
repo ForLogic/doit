@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using DoIt.Functions;
+using System.Diagnostics;
+using System.Security.Principal;
 
 namespace DoIt
 {
@@ -36,24 +38,58 @@ namespace DoIt
 			}
 
 			// settings
-			LoadSettings(configNode);
+			var cryptKey = Util.GetArg(args, "cryptKey");
+			LoadSettings(configNode, cryptKey);
 
-			// execute
 			var version = Assembly.GetExecutingAssembly().GetName().Version;
 			var user = System.Security.Principal.WindowsIdentity.GetCurrent();
-			var process = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
-			Shared.WriteLogLine("*******************");
-			Shared.WriteLogLine(String.Format("Application Started: {0} v{1}{2}", process, version.ToString(), user == null ? null : " (User: "+user.Name+")"));
+			var process = System.Diagnostics.Process.GetCurrentProcess();
+			var encryptionKey = Util.GetArg(args, "encryptionKey");
+			var decryptionKey = Util.GetArg(args, "decryptionKey");
+			if (!string.IsNullOrEmpty(encryptionKey) || !string.IsNullOrEmpty(decryptionKey)){
+				LogStart(args, process, version, user);
+				var lstConnStrNode = xml.SelectNodes("Configuration/Settings/ConnectionStrings");
+				if (lstConnStrNode != null)
+					foreach(XmlNode connStrNode in lstConnStrNode){
+						foreach (XmlElement n in Util.GetChildNodes(connStrNode, "Database", "Storage"))
+							if (!string.IsNullOrEmpty(n.InnerXml)){
+								if (!string.IsNullOrEmpty(encryptionKey) && Util.GetStr(n, "encrypted", "false").ToLower() != "true"){
+									n.InnerXml = System.Security.SecurityElement.Escape(n.InnerXml.Encrypt(encryptionKey));
+									n.SetAttribute("encrypted", "true");
+								}
+								if (!string.IsNullOrEmpty(decryptionKey) && Util.GetStr(n, "encrypted", "false").ToLower() == "true"){
+									n.InnerXml = System.Security.SecurityElement.Escape(n.InnerXml.Decrypt(decryptionKey));
+									n.RemoveAttribute("encrypted");
+								}
+							}
+				}
+				Shared.WriteLogLine("Saving config file.");
+				xml.Save(configFile);
+				LogEnd(args, process, version, user);
+				return;
+			}
 
+			// execute
+			LogStart(args, process, version, user);
 			Shared.ExecuteCommands(Util.GetChildNode(configNode, "Execute"));
 			System.Threading.Tasks.Task.WaitAll(Shared.StorageUploadTasks.ToArray());
+			LogEnd(args, process, version, user);
+		}
 
-			Shared.WriteLogLine(String.Format("Application Finished: {0} v{1}{2}", process, version.ToString(), user == null ? null : " (User: " + user.Name + ")"));
+		static void LogStart(string[] args, Process process, Version version, WindowsIdentity user)
+		{
+			Shared.WriteLogLine("*******************");
+			Shared.WriteLogLine(String.Format("Application Started: \"{0}{1}\" v{2}{3}", process.ProcessName, args==null || args.Length==0 ? null : " " + args.Concat(arg => arg, " "), version.ToString(), user == null ? null : " (User: "+user.Name+")"));
+		}
+
+		static void LogEnd(string[] args, Process process, Version version, WindowsIdentity user)
+		{
+			Shared.WriteLogLine(String.Format("Application Finished: \"{0}\" v{1}{2}", process.ProcessName, version.ToString(), user == null ? null : " (User: " + user.Name + ")"));
 			Shared.WriteLogLine();
 			Shared.WriteLogLine();
 		}
 
-		static void LoadSettings(XmlNode configNode)
+		static void LoadSettings(XmlNode configNode, string cryptKey)
 		{
 			var settingsNode = Util.GetChildNode(configNode, "Settings");
 			if (settingsNode == null)
@@ -85,9 +121,9 @@ namespace DoIt
 			if (connectionStrings != null)
 				foreach (XmlNode n in connectionStrings.ChildNodes){
 					if(n.Name.ToLower()=="database")
-						Shared.Databases[Util.GetStr(n, "id", "1")] = n.InnerText;
+						Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey);
 					else if(n.Name.ToLower()=="storage")
-						Shared.Storages[Util.GetStr(n, "id", "1")] = n.InnerText;
+						Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey);
 				}
 		}
 
