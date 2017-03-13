@@ -46,9 +46,6 @@ namespace DoIt.Functions
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
 			var sort = Util.GetStr(n, "sort");
 			var regex = Util.GetStr(n, "regex");
-			var lst = Directory.GetFiles(path, searchPattern, allDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-			if (!string.IsNullOrEmpty(regex))
-				lst = lst.Where(file => Regex.IsMatch(file, regex)).ToArray();
 			var dt = new DataTable();
 			dt.Columns.Add("full_path", typeof(string));
 			dt.Columns.Add("directory", typeof(string));
@@ -57,19 +54,24 @@ namespace DoIt.Functions
 			dt.Columns.Add("creation_time", typeof(DateTime));
 			dt.Columns.Add("last_write_time", typeof(DateTime));
 			dt.Columns.Add("length", typeof(long));
-			foreach (var file in lst){
-				var lstData = new List<object>(){file, Path.GetDirectoryName(file), Path.GetFileName(file), Path.GetExtension(file)};
-				if(fetchAttributes){
-					var fi = new FileInfo(file);
-					lstData.AddRange(new object[]{fi.CreationTime, fi.LastWriteTime, fi.Length});
+			if (Directory.Exists(path)){
+				var lst = Directory.GetFiles(path, searchPattern, allDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+				if (!string.IsNullOrEmpty(regex))
+					lst = lst.Where(file => Regex.IsMatch(file, regex)).ToArray();
+				foreach (var file in lst){
+					var lstData = new List<object>(){file, Path.GetDirectoryName(file), Path.GetFileName(file), Path.GetExtension(file)};
+					if(fetchAttributes){
+						var fi = new FileInfo(file);
+						lstData.AddRange(new object[]{fi.CreationTime, fi.LastWriteTime, fi.Length});
+					}
+					dt.Rows.Add(lstData.ToArray());
 				}
-				dt.Rows.Add(lstData.ToArray());
-			}
-			if (!string.IsNullOrEmpty(where)||!string.IsNullOrEmpty(sort)){
-				var lstRows = dt.Select(where, sort);
-				var lstRowsToRemove = dt.Rows.Cast<DataRow>().Where(r => !lstRows.Contains(r)).ToList();
-				foreach (var r in lstRowsToRemove)
-					dt.Rows.Remove(r);
+				if (!string.IsNullOrEmpty(where)||!string.IsNullOrEmpty(sort)){
+					var lstRows = dt.Select(where, sort);
+					var lstRowsToRemove = dt.Rows.Cast<DataRow>().Where(r => !lstRows.Contains(r)).ToList();
+					foreach (var r in lstRowsToRemove)
+						dt.Rows.Remove(r);
+				}
 			}
 			lock (Program.Shared.LockDataTables){
 				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = dt;
@@ -80,8 +82,12 @@ namespace DoIt.Functions
 		void MoveFile(XmlNode n){
 			var path = Program.Shared.ReplaceTags(Util.GetStr(n, "path"));
 			var to = Program.Shared.ReplaceTags(Util.GetStr(n, "to"));
-			if (!string.IsNullOrEmpty(path) && File.Exists(path))
+			if (!string.IsNullOrEmpty(path) && File.Exists(path)){
+				var dir = Path.GetDirectoryName(to);
+				if (!Directory.Exists(dir))
+					Directory.CreateDirectory(dir);
 				File.Move(path, to);
+			}
 		}
 
 		// move folder

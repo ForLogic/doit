@@ -95,13 +95,21 @@ namespace DoIt.Functions
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
 				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1) + (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null), snapshotTime);
-				if (blob.Exists())
+				if (blob.Exists()){
+					var dir = Path.GetDirectoryName(toFile);
+					if (!Directory.Exists(dir))
+						Directory.CreateDirectory(dir);
 					blob.DownloadToFile(toFile, FileMode.Create);
+				}
 			}
 			if(!string.IsNullOrEmpty(blobUri)){
 				var blob = new CloudBlob(new Uri(blobUri+ (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null);
-				if (blob.Exists())
+				if (blob.Exists()){
+					var dir = Path.GetDirectoryName(toFile);
+					if (!Directory.Exists(dir))
+						Directory.CreateDirectory(dir);
 					blob.DownloadToFile(toFile, FileMode.Create);
+				}
 			}
 		}
 
