@@ -59,7 +59,7 @@ namespace DoIt
 									n.SetAttribute("encrypted", "true");
 								}
 								if (!string.IsNullOrEmpty(decryptionKey) && Util.GetStr(n, "encrypted", "false").ToLower() == "true"){
-									n.InnerXml = System.Security.SecurityElement.Escape(n.InnerXml.Decrypt(decryptionKey));
+									n.InnerXml = n.InnerXml.Decrypt(decryptionKey);
 									n.RemoveAttribute("encrypted");
 								}
 							}
@@ -119,12 +119,13 @@ namespace DoIt
 			if (connectionStrings != null)
 				foreach (XmlNode n in Util.GetChildNodes(connectionStrings, "Database", "Storage", "MailServer", "SharedAccessSignature")){
 					switch (n.Name.ToLower()){
-						case "database": Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
-						case "storage": Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
-						case "mailserver": Shared.MailServers[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
-						case "sharedaccesssignature": Shared.SharedAccessSignatures[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : n.InnerXml.Decrypt(cryptKey); break;
+						case "database": Shared.Databases[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : new System.Security.SecurityElement("element", n.InnerXml.Decrypt(cryptKey)).Text; break;
+						case "storage": Shared.Storages[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : new System.Security.SecurityElement("element", n.InnerXml.Decrypt(cryptKey)).Text; break;
+						case "mailserver": Shared.MailServers[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : new System.Security.SecurityElement("element", n.InnerXml.Decrypt(cryptKey)).Text; break;
+						case "sharedaccesssignature": Shared.SharedAccessSignatures[Util.GetStr(n, "id", "1")] = string.IsNullOrEmpty(cryptKey) || string.IsNullOrEmpty(n.InnerText) || Util.GetStr(n, "encrypted", "false").ToLower()!="true" ? n.InnerText : new System.Security.SecurityElement("element", n.InnerXml.Decrypt(cryptKey)).Text; break;
 					}
 				}
+			
 
 			// settings: exceptions
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

@@ -19,7 +19,7 @@ namespace DoIt.Functions
 		{
 			if (Node == null)
 				return false;
-			var lstNodes = Util.GetChildNodes(Node, "FileProp", "BlobProp", "Calc", "CalcDate", "String", "Date");
+			var lstNodes = Util.GetChildNodes(Node, "FileProp", "BlobProp", "Calc", "CalcDate", "String", "Date", "Coalesce");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
 					case "fileprop": FileProp(n); break;
@@ -28,6 +28,7 @@ namespace DoIt.Functions
 					case "calcdate": CalcDate(n); break;
 					case "string": String(n); break;
 					case "date": Date(n); break;
+					case "coalesce": Coalesce(n); break;
 				}
 			return true;
 		}
@@ -145,6 +146,25 @@ namespace DoIt.Functions
 				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = date;
 			}
 			Program.Shared.WriteLogLine(string.Format("Date variable named \"{0}\" was set to \"{1}\"", to, value));
+		}
+
+		// coalesce
+		void Coalesce(XmlNode n)
+		{
+			var values = Program.Shared.ReplaceTags(Util.GetStr(n, "values"));
+			var to = Util.GetStr(n, "to");
+			var array = values?.Split(new string[]{",",";"},StringSplitOptions.RemoveEmptyEntries);
+			var value = null as object;
+			if (array != null)
+				foreach (var k in array){
+					value = Program.Shared.GetVariable(Program.Shared.ThreadID(), k);
+					if (value != null)
+						break;
+				}
+			lock (Program.Shared.LockVariables){
+				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = value;
+			}
+			Program.Shared.WriteLogLine(string.Format("Coalesce: variable named \"{0}\" was set to \"{1}\"", to, value));
 		}
 	}
 }
