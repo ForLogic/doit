@@ -131,7 +131,7 @@ namespace DoIt.Functions
 			var blobContainer = null as CloudBlobContainer;
 			if (string.IsNullOrEmpty(uri)){
 				blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
-				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null));
+				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (!string.IsNullOrEmpty(sas) && Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null));
 				lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
 			} else {
 				blobContainer = new CloudBlobContainer(new Uri(uri + (Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)));
