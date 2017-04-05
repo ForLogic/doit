@@ -16,7 +16,7 @@ namespace DoIt.Functions
 		{
 			if (Node == null)
 				return false;
-			var lstNodes = Util.GetChildNodes(Node, "Count", "Sum", "Avg", "Max", "Min", "SetRowValue", "GetDataRow", "Diff", "Join", "Intersect", "RemoveRows", "InsertRow");
+			var lstNodes = Util.GetChildNodes(Node, "Count", "Sum", "Avg", "Max", "Min", "SetRowValue", "GetDataRow", "Diff", "Join", "Intersect", "RemoveRows", "InsertRow", "Filter");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
 					case "count": Count(n); break;
@@ -294,14 +294,14 @@ namespace DoIt.Functions
 			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
 			if (dt == null)
 				return;
-			var newDT = new DataTable();
-			foreach (DataColumn c in dt.Columns)
+			var newDT = new DataTable(){TableName=dt.TableName};
+			foreach (DataColumn c in dt.Columns.Cast<DataColumn>().Where(col => string.IsNullOrEmpty(col.Expression)).ToArray())
 				newDT.Columns.Add(c.ColumnName, c.DataType);
 			var lstRows = dt.Select(where, sort);
 			foreach (var r in lstRows)
 				newDT.Rows.Add(r.ItemArray);
 			lock (Program.Shared.LockDataTables){
-				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = dt;
+				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = newDT;
 			}
 		}
 	}
