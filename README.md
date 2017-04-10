@@ -3,7 +3,8 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
 
 ## Index
 1. [The Configuration File](#TheConfigurationFile)
-    1. [Encryption](#TheConfigurationFileEncryption)
+    1. [Example](#TheConfigurationFileExample)
+    2. [Encryption](#TheConfigurationFileEncryption)
 2. [Settings](#Settings)
     1. [LogFile](#SettingsLogFile)
     2. [ConnectionStrings](#SettingsConnectionStrings)
@@ -64,6 +65,9 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
         * [Upload](#ExecuteStorageUpload)
         * [Download](#ExecuteStorageDownload)
         * [ListBlobs](#ExecuteStorageListBlobs)
+        * [Copy](#ExecuteStorageCopy)
+        * [SetMetadata] _(Waiting documentation)_
+        * [Snapshot] _(Waiting documentation)_
     16. [Condition](#ExecuteCondition)
     17. Ftp _(To-Do)_
         * Download
@@ -79,6 +83,69 @@ The default configuration file is called "DoIt.config.xml". Its main sections ar
 If you want to use another configuration file you can use:
 ```shell
 C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml"
+```
+
+### <a id="TheConfigurationFileExample">Example</a>
+Here is a configuration file example.
+Please use the full documentation for more commands or options.
+```html
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+
+  <!-- Here we load some data to use when executing -->
+  <Settings>
+
+    <ConnectionStrings>
+      <Database id="1">Data Source=localhost\sql2016express; Initial Catalog=database; Integrated Security=false; User Id=sa; Password=123;</Database>
+      <Storage id="1">DefaultEndpointsProtocol=https;AccountName=my_account;AccountKey=871oQKMifslemflIwq54e0fd8sJskdmw98348dMF0suJ0WODK73lMlwiehf34u0mm5ez6MdiewklFH3/w2/IEK==</Storage>
+      <MailServer id="1">host=smtp.domain.com; from=user@domain.com; port=587; ssl=true; user=user@domain.com; pass=123;</MailServer>
+    </ConnectionStrings>
+
+    <Exceptions mailServer="1" attachLogFile="true">
+      <Mail>admin1@company.com</Mail>
+      <Mail>admin2@company.com</Mail>
+    </Exceptions>
+
+    <LogFile toVar="logFile">%programdata%\DoIt\DoIt_{now:yyyy-MM-dd}.log</LogFile>
+
+  </Settings>
+
+  <!-- Here we put the script steps -->
+  <Execute>
+
+    <Log>We can use variables!</Log>
+    <SetValue>
+      <String to="my_var1" value="{now}" />
+    </SetValue>
+    <Log>Today is: {my_var1:yyyy-MM-dd}.</Log>
+    
+    <Log>Load the files from a directory to a variable</Log>
+    <LocalDisk>
+      <ListFiles to="files_list" path="C:\MyFolder" searchPattern="*.*" allDirectories="false" fetchAttributes="false" where="" sort="" regex="" />
+    </LocalDisk>
+
+    <Log>We can also use loops!</Log>
+    <ForEach itemFrom="files_list" where="" sort="">
+      <Log>File: {files_list.filename}</Log>
+    </ForEach>
+
+    <Log>Here is how to execute a SQL command to the database with id=1</Log>
+    <Sql database="1">
+      <Execute timeout="30">insert into backups (start_date) values (getdate())</Execute>
+    </Sql>
+
+    <Log>Create a database backup and save the filename to the variable bak1</Log>
+    <Database id="1">
+      <Backup toFile="%programdata%\DoIt\MyDatabase_{now:yyyy-MM-dd_HH-mm}.bak" type="bak" toVar="bak1" />
+    </Database>
+    
+    <Log>Upload the bak1 file to the storage with id=1</Log>
+    <Storage id="1">
+      <Upload file="{bak1}" toBlob="backups/Backup_{now:yyyy-MM-dd}/{bak1:filename}" deleteSource="true" />
+    </Storage>
+
+  </Execute>
+</Configuration>
 ```
 
 ### <a id="TheConfigurationFileEncryption">Encryption</a>
@@ -137,7 +204,8 @@ Use this tag to mail users if an exception occurs.
 <Configuration>
   <Settings>
     <Exceptions mailServer="1" attachLogFile="true">
-      <Mail>admin@company.com</Mail>
+      <Mail>admin1@company.com</Mail>
+      <Mail>admin2@company.com</Mail>
     </Exceptions>
   </Settings>
 </Configuration>
@@ -906,6 +974,21 @@ The columns with the name starting with "metadata_" will only be filled with the
   <Execute>
     <Storage id="1">
       <ListBlobs to="blobs_list" container="container{now:yyyyMM}" prefix="" fetchAttributes="false" details="none|snapshots|metadata" where="" sort="" regex="" />
+    </Storage>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteStorageCopy">Copy</a>
+Copies a blob from one storage account to another.
+
+*Tag Location: Configuration > Execute > Storage > Copy*
+```html
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Storage id="1">
+      <Copy blob="my_container1/my_blob.txt" toStorage="2" toBlob="my_container2/my_blob.txt" />
     </Storage>
   </Execute>
 </Configuration>
