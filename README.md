@@ -637,7 +637,7 @@ Set values on the specified columns/rows.
   <Execute>
     <DataTable>
       <SetRowValue data="users_list" where="">
-        <Column name="is_active" value="1" />
+        <Column name="is_active" type="int">1</Column>
       </SetRowValue>
     </DataTable>
   </Execute>
