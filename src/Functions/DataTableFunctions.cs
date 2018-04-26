@@ -16,7 +16,7 @@ namespace DoIt.Functions
 		{
 			if (Node == null)
 				return false;
-			var lstNodes = Util.GetChildNodes(Node, "Count", "Sum", "Avg", "Max", "Min", "SetRowValue", "GetDataRow", "Diff", "Join", "Intersect", "RemoveRows", "InsertRow", "Filter");
+			var lstNodes = Util.GetChildNodes(Node, "Count", "Sum", "Avg", "Max", "Min", "SetRowValue", "GetDataRow", "Diff", "Join", "Intersect", "RemoveRows", "InsertRow", "Filter", "Copy");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
 					case "count": Count(n); break;
@@ -32,6 +32,7 @@ namespace DoIt.Functions
 					case "removerows": RemoveRows(n); break;
 					case "insertrow": InsertRow(n); break;
 					case "filter": Filter(n); break;
+					case "copy": Copy(n); break;
 				}
 			return true;
 		}
@@ -300,6 +301,24 @@ namespace DoIt.Functions
 			var lstRows = dt.Select(where, sort);
 			foreach (var r in lstRows)
 				newDT.Rows.Add(r.ItemArray);
+			lock (Program.Shared.LockDataTables){
+				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = newDT;
+			}
+		}
+
+		// copy datatable
+		void Copy(XmlNode n)
+		{
+			var data = Util.GetStr(n, "data");
+			if (string.IsNullOrEmpty(data))
+				return;
+			var to = Util.GetStr(n, "to");
+			if (string.IsNullOrEmpty(to))
+				return;
+			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
+			if (dt == null)
+				return;
+			var newDT = dt.Copy();
 			lock (Program.Shared.LockDataTables){
 				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = newDT;
 			}

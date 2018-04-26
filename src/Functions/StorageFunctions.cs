@@ -94,7 +94,7 @@ namespace DoIt.Functions
 			if(!string.IsNullOrEmpty(blobName)){
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
-				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1) + (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null), snapshotTime);
+				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1) + (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null), snapshotTime);
 				if (blob.Exists()){
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
@@ -103,7 +103,7 @@ namespace DoIt.Functions
 				}
 			}
 			if(!string.IsNullOrEmpty(blobUri)){
-				var blob = new CloudBlob(new Uri(blobUri+ (Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null);
+				var blob = new CloudBlob(new Uri(blobUri+ (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null);
 				if (blob.Exists()){
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
@@ -131,7 +131,7 @@ namespace DoIt.Functions
 			var blobContainer = null as CloudBlobContainer;
 			if (string.IsNullOrEmpty(uri)){
 				blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
-				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (!string.IsNullOrEmpty(sas) && Shared.SharedAccessSignatures.ContainsKey(sas) ? Shared.SharedAccessSignatures[sas] : null));
+				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null));
 				lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
 			} else {
 				blobContainer = new CloudBlobContainer(new Uri(uri + (Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)));

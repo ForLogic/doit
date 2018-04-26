@@ -228,7 +228,8 @@ namespace DoIt
 				if (node == null)
 					return false;
 				foreach (XmlNode subNode in node.ChildNodes){
-					if (subNode.Name == "#comment") continue;
+					if (subNode.Name == "#comment" || subNode.Name == "#whitespace")
+                        continue;
 					switch (subNode.Name.ToLower()){
 						case "database": new DatabaseFunctions(subNode).Execute(); break;
 						case "zip": new ZipFunctions(subNode).Execute(); break;

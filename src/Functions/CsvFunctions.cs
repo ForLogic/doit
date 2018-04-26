@@ -57,6 +57,7 @@ namespace DoIt.Functions
 			if (string.IsNullOrEmpty(data))
 				return;
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
+			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
 			var append = Util.GetStr(n, "append", "true").ToLower() == "true";
 			var datatable = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
 			if (datatable == null)
@@ -73,7 +74,7 @@ namespace DoIt.Functions
 						sw.Write(separator);
 				}
 				sw.WriteLine();
-				var lstRows = string.IsNullOrEmpty(where) ? datatable.Rows.Cast<DataRow>().ToArray() : datatable.Select(where);
+				var lstRows = string.IsNullOrEmpty(where) ? datatable.Rows.Cast<DataRow>().ToArray() : datatable.Select(where, sort);
 				foreach (DataRow r in lstRows){
 					foreach (var c in lstColumns.Keys){
 						sw.Write("\""+Program.Shared.ReplaceTags(lstColumns[c], new Dictionary<string, DataRow>(){{data,r}}).Replace("\"","\"\"")+"\"");
