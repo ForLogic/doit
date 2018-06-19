@@ -136,7 +136,7 @@ namespace DoIt.Functions
 					if (!dt.Columns.Contains(c.Name))
 						dt.Columns.Add(c.Name, Util.GetType(c.Type));
 					foreach (DataRow r in lstRows)
-						r[c.Name] = Util.GetValue(c.Value, c.Type);
+						r[c.Name] = Util.GetValue(c.Value, c.Type) ?? DBNull.Value;
 				}
 			}
 		}

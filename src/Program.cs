@@ -137,6 +137,7 @@ namespace DoIt
 					Shared.Smtp = smtp1;
 				else if (!string.IsNullOrEmpty(smtp2) && Shared.MailServers.ContainsKey(smtp2))
 					Shared.Smtp = Shared.MailServers[smtp2];
+				Shared.MailSubject = Util.GetStr(exceptions, "mailSubject");
 				Shared.AttachLogFile = Util.GetStr(exceptions, "attachLogFile") == "true";
 				foreach (XmlNode n in exceptions.SelectNodes("Mail"))
 					Shared.Emails.Add(n.InnerText);
@@ -160,7 +161,7 @@ namespace DoIt
 			mail.From = new MailAddress(Util.GetConfigData(Shared.Smtp, "from"));
 			foreach (var m in Shared.Emails)
 				mail.To.Add(new MailAddress(m));
-			mail.Subject = "DoIt: " + ex.Message;
+			mail.Subject = string.IsNullOrEmpty(Shared.MailSubject) ? "DoIt: " + ex.Message : Shared.MailSubject;
 			mail.Body = str;
 			var zipLogFile = null as String;
 			if (Shared.AttachLogFile && File.Exists(Shared.LogFile)){
@@ -180,6 +181,7 @@ namespace DoIt
 		{
 			public static String LogFile { get; set; }
 			public static string Smtp { get; set; }
+			public static string MailSubject { get; set; }
 			public static bool AttachLogFile { get; set; }
 			public static Dictionary<String, String> Storages { get; set; }
 			public static Dictionary<String, String> Databases { get; set; }
@@ -319,7 +321,8 @@ namespace DoIt
 				str = Util.GetStrData(str, "now", DateTime.Now);
 				str = Util.GetStrData(str, "today", DateTime.Today);
 				str = Util.GetStrData(str, "guid", Guid.NewGuid());
-				for(var x=0;x<DbBackups.Count;x++){
+                str = Util.GetStrData(str, "rand", null);
+                for (var x=0;x<DbBackups.Count;x++){
 					str = str.Replace("%dbBackup" + (x+1) + "%", DbBackups[x]);
 					str = str.Replace("%dbBackupFilename" + (x+1) + "%", Path.GetFileName(DbBackups[x]));
 				}

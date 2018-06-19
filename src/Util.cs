@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using System.Data.SqlClient;
 using System.Data;
 using ICSharpCode.SharpZipLib.Zip;
+using System.Text;
+using System.Data.Common;
 
 namespace DoIt
 {
@@ -43,7 +45,7 @@ namespace DoIt
 			if (node == null)
 				return null;
 			if(childNames == null || childNames.Length == 0 || childNames.All(n => string.IsNullOrEmpty(n)))
-				return node.ChildNodes.Cast<XmlNode>().ToArray();
+				return node.ChildNodes.Cast<XmlNode>().Where(n => n.Name != "#comment" && n.Name != "#whitespace").ToArray();
 			return node.ChildNodes.Cast<XmlNode>().Where(n => childNames.Any(n2 => n2 != null && n.Name.ToLower() == n2.ToLower())).ToArray();
 		}
 
@@ -167,6 +169,7 @@ namespace DoIt
 		{
 			if (value == null || string.IsNullOrEmpty(type))
 				return value;
+            var str = Convert.ToString(value);
 			switch(type.ToLower()){
 				case "byte": return Convert.ToByte(value);
 				case "short": return Convert.ToInt16(value);
@@ -177,7 +180,14 @@ namespace DoIt
 				case "double": return Convert.ToDouble(value);
 				case "string": return Convert.ToString(value);
 				case "datetime": return value is DateTime ? new Nullable<DateTime>(Convert.ToDateTime(value)) : ParseDateTime(Convert.ToString(value));
-				case "datetimeoffset": return value is DateTime ? new Nullable<DateTimeOffset>(new DateTimeOffset(Convert.ToDateTime(value))) : ParseDateTimeOffset(Convert.ToString(value));
+				case "datetimeoffset":
+                    return value is DateTime ? 
+                    new Nullable<DateTimeOffset>(new DateTimeOffset(Convert.ToDateTime(value))) :
+                    value is string && !string.IsNullOrEmpty(str) && Regex.IsMatch(str,@"^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}\.\d{7}$") ?
+                    new Nullable<DateTimeOffset>(new DateTimeOffset(DateTime.ParseExact(str, "yyyy-MM-dd HH:mm:ss.fffffff", null), TimeSpan.Zero)) :
+					value is string && !string.IsNullOrEmpty(str) && Regex.IsMatch(str, @"^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}\.\d{7} (\+|\-)?\d{2}:\d{2}$") ?
+					new Nullable<DateTimeOffset>(DateTimeOffset.ParseExact(str, "yyyy-MM-dd HH:mm:ss.fffffff zzz", null)) :
+					ParseDateTimeOffset(str);
 				case "bool": return Convert.ToBoolean(value);
 			}
 			return value;
@@ -205,25 +215,98 @@ namespace DoIt
 
 		public static string GetStrData(string str, string tag, object data)
 		{
-			str = str.Replace("{" + tag + "}", string.Format("{0}", data is DateTime ? GetDateTimeString((DateTime)data) : (data is DateTimeOffset ? GetDateTimeOffsetString((DateTimeOffset)data) : data)));
-			while (true){
-				var index1 = str.ToLower().IndexOf("{" + tag.ToLower() + ":");
-				var index2 = str.IndexOf("}", index1 + 1);
-				if (index1 == -1 || index2 == -1)
-					break;
-				var format = str.Substring(index1 + tag.Length + 2, index2 - index1 - (tag.Length + 2));
-				if (!string.IsNullOrEmpty(format)){
-					str = str.Remove(index1, index2 - index1 + 1);
-					if (format.ToLower() == "filename")
-						str = str.Insert(index1, Path.GetFileName(Convert.ToString(data)));
-					else if (format.ToLower() == "fileextension")
-						str = str.Insert(index1, Convert.ToString(data).GetFileExtension());
+			var pattern = "\\{(?<tag>" + tag.Replace("$", "\\$").Replace(".", "\\.") + ")(?<params>\\:+.+)*\\}";
+			var tagLower = tag.ToLower();
+			var m = Regex.Match(str, pattern);
+			while (m != null && m.Success){
+				var p = m.Groups["params"];
+				if (!p.Success){
+					var valueStr = null as string;
+					if (data is DateTimeOffset)
+						valueStr = Util.GetDateTimeOffsetString((DateTimeOffset)data);
+					else if (data is DateTime)
+						valueStr = Util.GetDateTimeString((DateTime)data);
 					else
-						str = str.Insert(index1, string.Format("{0:" + format + "}", data));
+						valueStr = Convert.ToString(data);
+					str = str
+						.Remove(m.Index, m.Length)
+						.Insert(m.Index, tagLower == "rand" ? Util.Random(15) : valueStr);
+					m = Regex.Match(str, pattern);
+					continue;
 				}
+
+				var array = p.Value.Split(new char[] { ':' }, StringSplitOptions.None);
+				if (tag == "rand"){
+					var len = array.Length >= 2 && Regex.IsMatch(array[1], "^\\d+$") ? Convert.ToInt32(array[1]) : 15;
+					var chars = array.Length == 3 && !string.IsNullOrEmpty(array[2]) ? array[2] : "0123456789ABCDEFGHIJKLMNOPQRSTUVXWYZabcdefghijklmnopqrstuvxwyz";
+					if (chars.Length == 7 || chars.Length == 5)
+						switch (chars.ToLower()){
+							case "numbers": chars = "0123456789"; break;
+							case "upper": chars = "ABCDEFGHIJKLMNOPQRSTUVXWYZ"; break;
+							case "lower": chars = "abcdefghijklmnopqrstuvxwyz"; break;
+						}
+					var rand = Util.Random(len, chars);
+					str = str
+						.Remove(m.Index, m.Length)
+						.Insert(m.Index, rand);
+					m = Regex.Match(str, pattern);
+					continue;
+				}
+
+				foreach (var v in array)
+					if (!string.IsNullOrEmpty(v) && !v.StartsWith(">"))
+						switch (v.ToLower()){
+							case "filename": data = Path.GetFileName(Convert.ToString(data)); break;
+							case "fileextension": data = Convert.ToString(data).GetFileExtension(); break;
+							default: data = string.Format($"{{0:{v}}}", data); break;
+						}
+
+				var value = null as string; //data is DateTimeOffset ? string.Format("{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}", data) : Convert.ToString(data);
+				if (data is DateTimeOffset)
+					value = string.Format("{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}", data);
+				else
+					value = Convert.ToString(data);
+
+				if (string.IsNullOrEmpty(value)) {
+					var last = array.Length > 0 ? array[array.Length - 1] : null;
+					if (!string.IsNullOrEmpty(last) && last.StartsWith(">"))
+						value = last.Remove(0, 1);
+				}
+
+				str = str
+					.Remove(m.Index, m.Length)
+					.Insert(m.Index, value);
+				m = Regex.Match(str, pattern);
 			}
 			return str;
 		}
+
+		static string[] GetTagParameters(string str, string tag)
+		{
+			var lst = new List<string>();
+			var strLower = str.ToLower();
+			var tagLower = tag.ToLower();
+			while (true){
+				var index1 = strLower.IndexOf("{" + tagLower + ":");
+				var index2 = strLower.IndexOf("}", index1 + 1);
+				if (index1 == -1 || index2 == -1)
+					break;
+				var parameter = str.Substring(index1 + tag.Length + 2, index2 - index1 - (tag.Length + 2));
+				if (!string.IsNullOrEmpty(parameter))
+					lst.Add(parameter);
+				str = str.Remove(index1, index2 - index1 + 1);
+			}
+			return lst.ToArray();
+		}
+
+        public static string Random(int charCount, string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVXWYZabcdefghijklmnopqrstuvxwyz")
+        {
+            var r = new Random();
+            var sb = new StringBuilder();
+            for (var x = 0; x < charCount; x++)
+                sb.Append(chars[r.Next(chars.Length)]);
+            return sb.ToString();
+        }
 
 		public static string GetDateTimeString(DateTime date)
 		{
@@ -390,79 +473,189 @@ namespace DoIt
 		#region database helpers
 		public static DataTable Select(string sql, string dbConnectionString, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
 				var dt = new DataTable();
 				using (var cmd = new SqlCommand(sql, conn)){
 					if (commandTimeout != null)
 						cmd.CommandTimeout = commandTimeout.Value;
-					using (var da = new SqlDataAdapter(cmd))
-						da.Fill(dt);
-					return dt;
+					return Select(cmd);
 				}
 			}
 		}
 
-		public static DataTable Select(string sql, SqlTransaction transaction, Int32? commandTimeout = null)
+		public static DataTable Select(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
-			var dt = new DataTable();
 			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
-				using (var da = new SqlDataAdapter(cmd))
-					da.Fill(dt);
+				if (parameters != null)
+					foreach (var p in parameters)
+						cmd.Parameters.Add(p);
+				return Select(cmd);
 			}
+		}
+
+		public static DataTable Select(SqlCommand cmd)
+		{
+			if (cmd == null){
+				Console.WriteLine("SQL Select: null SqlCommand reference.");
+				Program.Shared.WriteLogLine("SQL Select: null SqlCommand reference.");
+				return new DataTable();
+			}
+			var sql = GetCommandString(cmd).Trim();
+			Console.WriteLine($"SQL Select: {sql}");
+			Program.Shared.WriteLogLine($"SQL Select: {sql}");
+			var dt = new DataTable();
+			using (var da = new SqlDataAdapter(cmd))
+				da.Fill(dt);
+			Console.WriteLine($"SQL Select: {dt.Rows.Count} row(s) found");
+			Program.Shared.WriteLogLine($"SQL Select: {dt.Rows.Count} row(s) found");
 			return dt;
 		}
 
 		public static object Scalar(string sql, string dbConnectionString, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
 				using (var cmd = new SqlCommand(sql, conn)){
 					if (commandTimeout != null)
 						cmd.CommandTimeout = commandTimeout.Value;
-					return cmd.ExecuteScalar();
+					return Scalar(cmd);
 				}
 			}
 		}
 
-		public static object Scalar(string sql, SqlTransaction transaction, Int32? commandTimeout = null)
+		public static object Scalar(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
 			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
-				return cmd.ExecuteScalar();
+				if (parameters != null)
+					foreach (var p in parameters)
+						cmd.Parameters.Add(p);
+				return Scalar(cmd);
 			}
+		}
+
+		public static object Scalar(SqlCommand cmd)
+		{
+			if (cmd == null){
+				Console.WriteLine("SQL Scalar: null SqlCommand reference.");
+				Program.Shared.WriteLogLine("SQL Scalar: null SqlCommand reference.");
+				return 0;
+			}
+			var sql = GetCommandString(cmd).Trim();
+			Console.WriteLine($"SQL Scalar: {sql}");
+			Program.Shared.WriteLogLine($"SQL Scalar: {sql}");
+			var obj = cmd.ExecuteScalar();
+			Console.WriteLine($"SQL Scalar: Result is \"{(obj == DBNull.Value ? "null" : Convert.ToString(obj))}\"");
+			Program.Shared.WriteLogLine($"SQL Scalar: Result is \"{(obj == DBNull.Value ? "null" : Convert.ToString(obj))}\"");
+			return obj;
 		}
 
 		public static int Execute(string sql, string dbConnectionString, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
 			using (var conn = new SqlConnection(dbConnectionString)){
 				conn.Open();
 				using (var cmd = new SqlCommand(sql, conn)){
 					if (commandTimeout != null)
 						cmd.CommandTimeout = commandTimeout.Value;
-					return cmd.ExecuteNonQuery();
+					return Execute(cmd);
 				}
 			}
 		}
 
-		public static int Execute(string sql, SqlTransaction transaction, Int32? commandTimeout = null)
+		public static int Execute(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			Console.WriteLine("SQL: " + sql);
 			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
-				return cmd.ExecuteNonQuery();
+				if (parameters != null)
+					foreach (var p in parameters)
+						cmd.Parameters.Add(p);
+				return Execute(cmd);
 			}
 		}
+
+		public static int Execute(SqlCommand cmd)
+		{
+			if (cmd == null){
+				Console.WriteLine("SQL Execute: null SqlCommand reference.");
+				Program.Shared.WriteLogLine("SQL Execute: null SqlCommand reference.");
+				return 0;
+			}
+			var sql = GetCommandString(cmd).Trim();
+			Console.WriteLine($"SQL Execute: {sql}");
+			Program.Shared.WriteLogLine($"SQL Execute: {sql}");
+			var rows = cmd.ExecuteNonQuery();
+			Console.WriteLine($"SQL Execute: {rows} row(s) affected");
+			Program.Shared.WriteLogLine($"SQL Execute: {rows} row(s) affected");
+			return rows;
+		}
 		#endregion
+
+
+		public static string GetCommandString(SqlCommand cmd)
+		{
+			var s = System.Globalization.NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
+			Func<SqlParameter, string> fnGetString = (SqlParameter p) => {
+				if (p.Value == null || p.Value == DBNull.Value)
+					return "null";
+				switch (p.SqlDbType){
+					case SqlDbType.Char:
+					case SqlDbType.VarChar:
+					case SqlDbType.NChar:
+					case SqlDbType.NVarChar:
+					case SqlDbType.Text:
+					case SqlDbType.NText:
+						return $"'{Convert.ToString(p.Value).Replace("'", "''")}'";
+					case SqlDbType.Date:
+						return $"'{Convert.ToDateTime(p.Value).ToString("yyyy-MM-dd")}'";
+					case SqlDbType.DateTime:
+					case SqlDbType.DateTime2:
+						var v1 = Convert.ToDateTime(p.Value);
+						return $"'{v1.ToString("yyyy-MM-dd" + (v1.Hour == 0 && v1.Minute == 0 && v1.Second == 0 && v1.Millisecond == 0 ? null : " HH:mm:ss.fff"))}'";
+					case SqlDbType.DateTimeOffset:
+						var v2 = (DateTimeOffset)p.Value;
+						return $"'{v2.ToString("yyyy-MM-dd HH:mm:ss.fffffff zzz")}'";
+					case SqlDbType.Bit:
+						return Convert.ToBoolean(p.Value) ? "1" : "0";
+					case SqlDbType.TinyInt:
+					case SqlDbType.SmallInt:
+					case SqlDbType.Int:
+					case SqlDbType.BigInt:
+						return Convert.ToString(p.Value);
+					case SqlDbType.Decimal:
+					case SqlDbType.Float:
+					case SqlDbType.Real:
+						var v3 = Convert.ToDecimal(p.Value);
+						return Convert.ToString(v3).Replace(s, ".");
+				}
+				return $"'{Convert.ToString(p.Value).Replace("'", "''")}'";
+			};
+			var sql = cmd.CommandText;
+			foreach (SqlParameter p in cmd.Parameters)
+				sql = ReplaceSQLParameter(sql, "@" + p.ParameterName, fnGetString(p));
+			return sql;
+		}
+
+		public static string ReplaceSQLParameter(string sql, string paramName, string paramValue)
+		{
+			var index = -1;
+			while (true){
+				index = index >= sql.Length ? -1 : sql.IndexOf(paramName, index + 1);
+				if (index == -1)
+					return sql;
+				var replace = sql.Length == index + paramName.Length || !System.Text.RegularExpressions.Regex.IsMatch(Convert.ToString(sql[index + paramName.Length]), "[a-zA-Z0-9_]+");
+				if (replace){
+					sql = sql.Remove(index, paramName.Length).Insert(index, paramValue);
+					index += paramValue.Length;
+				}
+				else
+					index += paramName.Length;
+			}
+		}
 
 	}
 }

@@ -20,8 +20,11 @@ namespace DoIt.Functions
 		{
 			if (Node == null)
 				return false;
-			Program.Shared.IsLogEnabled = Util.GetStr(Node, "enabled", "true").ToLower() == "true";
-			Program.Shared.WriteLogLine(Program.Shared.ReplaceTags(Node.InnerXml));
+
+            var str = Program.Shared.ReplaceTags(Node.InnerXml);
+            Program.Shared.IsLogEnabled = Util.GetStr(Node, "enabled", "true").ToLower() == "true";
+			Program.Shared.WriteLogLine(str);
+            Console.WriteLine(str);
 			return true;
 		}
 	}

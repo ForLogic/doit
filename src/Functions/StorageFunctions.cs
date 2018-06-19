@@ -146,17 +146,17 @@ namespace DoIt.Functions
 			dt.Columns.Add("blob_container", typeof(string));
 			dt.Columns.Add("blob_uri", typeof(string));
 			dt.Columns.Add("blob_length", typeof(long));
-			dt.Columns.Add("blob_last_modified", typeof(DateTime));
+			dt.Columns.Add("blob_last_modified", typeof(DateTimeOffset));
 			dt.Columns.Add("blob_content_type", typeof(string));
 			dt.Columns.Add("blob_content_md5", typeof(string));
 			dt.Columns.Add("blob_is_snapshot", typeof(bool));
-			dt.Columns.Add("blob_snapshot_time", typeof(DateTime));
+			dt.Columns.Add("blob_snapshot_time", typeof(DateTimeOffset));
 			foreach (var blob in lst){
 				if (fetchAttributes){
 					blob.FetchAttributes();
 					Program.Shared.WriteLogLine("Fetching blob attributes: " + blob.Uri.ToString());
 				}
-				var lstRowData = new List<object>(){blob.Name, blob.Name.GetFileExtension(), blob.Container.Name, blob.Uri.ToString(), blob.Properties.Length, blob.Properties.LastModified == null ? null : new Nullable<DateTime>(blob.Properties.LastModified.Value.LocalDateTime), blob.Properties.ContentType, blob.Properties.ContentMD5, blob.IsSnapshot, blob.SnapshotTime == null ? null : new Nullable<DateTime>(blob.SnapshotTime.Value.LocalDateTime)};
+				var lstRowData = new List<object>(){blob.Name, blob.Name.GetFileExtension(), blob.Container.Name, blob.Uri.ToString(), blob.Properties.Length, blob.Properties.LastModified, blob.Properties.ContentType, blob.Properties.ContentMD5, blob.IsSnapshot, blob.SnapshotTime};
 				if(blob.Metadata != null){
 					foreach (var k in blob.Metadata.Keys)
 						if (!dt.Columns.Contains("metadata_" + k)){
@@ -255,10 +255,29 @@ namespace DoIt.Functions
 			var blobContainer = blobClient.GetContainerReference(blob.Remove(blob.IndexOf("/")));
 			var blobRef = blobContainer.GetBlockBlobReference(blob.Substring(blob.IndexOf("/") + 1));
 			var lstMetadata = Util.GetChildNodes(n, "Metadata").Select(n2 => new { Name = Util.GetStr(n2, "name"), Value = Extensions.OnlyChars(Extensions.RemoveAccents(Program.Shared.ReplaceTags(n2.InnerXml)), "0123456789abcdefghijklmnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVXWYZ_- ().:/", "_")}).Where(n2 => !string.IsNullOrEmpty(n2.Value)).ToDictionary(n2 => n2.Name, n2 => n2.Value);
-			if (blobRef.Exists())
-				blobRef.CreateSnapshot(lstMetadata.Count == 0 ? null : lstMetadata);
-			//WriteLogLine("Snapshot created for blob: {0}", blobRef.Uri.ToString());
-		}
+            if (!blobRef.Exists())
+                return;
+            var snapshot = blobRef.CreateSnapshot(lstMetadata.Count == 0 ? null : lstMetadata);
+            var snapshotTimeToVar = Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTimeToVar"));
+            var snapshotTimeToRow = Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTimeToRow"));
+            if (!string.IsNullOrEmpty(snapshotTimeToVar))
+                lock (Program.Shared.LockVariables)
+                    Program.Shared.Variables[snapshotTimeToVar + ";" + Program.Shared.GetSequence()] = snapshot.SnapshotTime;
+            if (!string.IsNullOrEmpty(snapshotTimeToRow)){
+                var lstRows = Program.Shared.GetCurrentRows(Program.Shared.ThreadID());
+                var index = snapshotTimeToRow.IndexOf(".");
+                if (index == -1)
+                    return;
+                var table = snapshotTimeToRow.Remove(index);
+                var column = snapshotTimeToRow.Substring(index+1);
+                lock (Program.Shared.LockDataTables){
+                    var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), table);
+					if (!dt.Columns.Contains(column))
+                        dt.Columns.Add(column, typeof(DateTimeOffset));
+                    lstRows[table][column] = snapshot.SnapshotTime;
+                }
+            }
+        }
 
 		// delete blobs
 		void DeleteBlobs(string id, XmlNode n){
