@@ -103,7 +103,7 @@ namespace DoIt.Functions
 				}
 			}
 			if(!string.IsNullOrEmpty(blobUri)){
-				var blob = new CloudBlob(new Uri(blobUri+ (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null);
+				var blob = new CloudBlob(new Uri(blobUri+ (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null as CloudBlobClient);
 				if (blob.Exists()){
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
@@ -258,6 +258,8 @@ namespace DoIt.Functions
             if (!blobRef.Exists())
                 return;
             var snapshot = blobRef.CreateSnapshot(lstMetadata.Count == 0 ? null : lstMetadata);
+			Program.Shared.WriteLogLine("Snapshot time: {0:yyyy-MM-dd HH:mm:ss.fffffff zzz}", snapshot.SnapshotTime);
+			//var snapshot = blobRef.Snapshot(lstMetadata.Count == 0 ? null : lstMetadata);
             var snapshotTimeToVar = Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTimeToVar"));
             var snapshotTimeToRow = Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTimeToRow"));
             if (!string.IsNullOrEmpty(snapshotTimeToVar))
@@ -270,8 +272,8 @@ namespace DoIt.Functions
                     return;
                 var table = snapshotTimeToRow.Remove(index);
                 var column = snapshotTimeToRow.Substring(index+1);
+                var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), table);
                 lock (Program.Shared.LockDataTables){
-                    var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), table);
 					if (!dt.Columns.Contains(column))
                         dt.Columns.Add(column, typeof(DateTimeOffset));
                     lstRows[table][column] = snapshot.SnapshotTime;

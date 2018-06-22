@@ -299,12 +299,16 @@ namespace DoIt
 			return lst.ToArray();
 		}
 
+		static Random RandomInstance { get; set; } = new Random();
+
         public static string Random(int charCount, string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVXWYZabcdefghijklmnopqrstuvxwyz")
         {
-            var r = new Random();
             var sb = new StringBuilder();
             for (var x = 0; x < charCount; x++)
-                sb.Append(chars[r.Next(chars.Length)]);
+				lock (RandomInstance){
+					var rValue = RandomInstance.Next(chars.Length);
+					sb.Append(chars[rValue]);
+				}
             return sb.ToString();
         }
 

@@ -127,16 +127,42 @@ namespace DoIt.Functions
 		// set row value
 		void SetRowValue(XmlNode n){
 			var data = Util.GetStr(n, "data");
+			var row = Util.GetStr(n, "row");
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
 			var lstColumns = Util.GetChildNodes(n, "Column").Select(n2 => new { Name = Util.GetStr(n2, "name"), Type = Util.GetStr(n2, "type"), Value = Program.Shared.ReplaceTags(n2.InnerXml) }).ToArray();
-			var dt = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
-			var lstRows = string.IsNullOrEmpty(where) ? dt.Rows.Cast<DataRow>().ToArray() : dt.Select(where);
-			foreach (var c in lstColumns){
+			var dt = string.IsNullOrEmpty(data) ? null : Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
+			var r1 = string.IsNullOrEmpty(row) ? null : Program.Shared.GetVariable(Program.Shared.ThreadID(), row) as Dictionary<string, object>;
+			var r2 = string.IsNullOrEmpty(row) ? null : Program.Shared.GetCurrentRow(Program.Shared.ThreadID(), row);
+			if (dt == null)
+				return;
+			if (r1 != null)
 				lock (Program.Shared.LockDataTables){
-					if (!dt.Columns.Contains(c.Name))
-						dt.Columns.Add(c.Name, Util.GetType(c.Type));
-					foreach (DataRow r in lstRows)
-						r[c.Name] = Util.GetValue(c.Value, c.Type) ?? DBNull.Value;
+					var index = Convert.ToInt32(r1["$RowIndex"]);
+					var r = index < dt.Rows.Count ? dt.Rows[index] : null;
+					if (r != null)
+						foreach (var c in lstColumns){
+							if (!dt.Columns.Contains(c.Name))
+								dt.Columns.Add(c.Name, Util.GetType(c.Type));
+							var value = Util.GetValue(c.Value, c.Type) ?? DBNull.Value;
+							r[c.Name] = r1[c.Name] = value;
+						}
+				}
+			if (r2 != null)
+				lock (Program.Shared.LockDataTables)
+					foreach (var c in lstColumns){
+						if (!dt.Columns.Contains(c.Name))
+							dt.Columns.Add(c.Name, Util.GetType(c.Type));
+						r2[c.Name] = Util.GetValue(c.Value, c.Type) ?? DBNull.Value;
+					}
+			if (r1 == null && r2 == null){
+				var lstRows = string.IsNullOrEmpty(where) ? dt.Rows.Cast<DataRow>().ToArray() : dt.Select(where);
+				foreach (var c in lstColumns){
+					lock (Program.Shared.LockDataTables){
+						if (!dt.Columns.Contains(c.Name))
+							dt.Columns.Add(c.Name, Util.GetType(c.Type));
+						foreach (DataRow r in lstRows)
+							r[c.Name] = Util.GetValue(c.Value, c.Type) ?? DBNull.Value;
+					}
 				}
 			}
 		}
@@ -155,6 +181,7 @@ namespace DoIt.Functions
 			var r = rows.Length == 0 || x > rows.Length - 1 ? null : rows[x];
 			foreach (DataColumn c in dt.Columns)
 				lst[c.ColumnName] = r == null ? null : r[c];
+			lst["$RowIndex"] = x;
 			lock (Program.Shared.LockVariables){
 				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = lst;
 			}
