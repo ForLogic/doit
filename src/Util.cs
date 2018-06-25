@@ -215,7 +215,7 @@ namespace DoIt
 
 		public static string GetStrData(string str, string tag, object data)
 		{
-			var pattern = "\\{(?<tag>" + tag.Replace("$", "\\$").Replace(".", "\\.") + ")(?<params>\\:+.+)*\\}";
+			var pattern = "\\{(?<tag>" + tag.Replace("$", "\\$").Replace(".", "\\.") + ")(?<params>\\:+.+?)*\\}";
 			var tagLower = tag.ToLower();
 			var m = Regex.Match(str, pattern);
 			while (m != null && m.Success){

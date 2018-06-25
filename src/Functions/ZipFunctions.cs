@@ -136,12 +136,12 @@ namespace DoIt.Functions
 			var rowsCount = dt == null ? 1 : lstRows.Length;
 			for(var x=0; x<rowsCount; x++){
 				var lstCurrentRows = dt == null ? null : new Dictionary<string, DataRow>(){{forEach,lstRows[x]}};
-				var snapshotTime = Util.ParseDateTime(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime"), lstCurrentRows));
+				var snapshotTime = Util.ParseDateTimeOffset(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime"), lstCurrentRows));
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[fromStorage]).CreateCloudBlobClient();
 				var blobName = Program.Shared.ReplaceTags(Util.GetStr(n, "name"), lstCurrentRows);
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
-				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1), new DateTimeOffset(snapshotTime.Value, TimeSpan.Zero));
-				var dateTime = Util.ParseDateTime(Program.Shared.ReplaceTags(Util.GetStr(n, "dateTime"), lstCurrentRows));
+				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1), snapshotTime.Value);
+				var dateTime = Util.ParseDateTimeOffset(Program.Shared.ReplaceTags(Util.GetStr(n, "dateTime"), lstCurrentRows));
 				var size = Convert.ToInt64(Program.Shared.ReplaceTags(Util.GetStr(n, "size", "0"), lstCurrentRows));
 				var zipEntry = GetZipEntry(n, lstCurrentRows, blob.Name);
 				if (!blob.Exists())
@@ -151,7 +151,7 @@ namespace DoIt.Functions
 					dateTime = blob.Properties.LastModified.Value.DateTime;
 					size = blob.Properties.Length;
 				}
-				zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=dateTime??DateTime.Now, Size=size});
+				zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=(dateTime??DateTimeOffset.Now).DateTime, Size=size});
 				blob.DownloadToStream(zipStream);
 				Program.Shared.WriteLogLine(String.Format("Add Blob to Zip (Blob: {0}; Blob Size: {1}).", blob.Uri.ToString(), Util.GetFileSize(size)));
 			}

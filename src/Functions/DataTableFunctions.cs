@@ -181,7 +181,7 @@ namespace DoIt.Functions
 			var r = rows.Length == 0 || x > rows.Length - 1 ? null : rows[x];
 			foreach (DataColumn c in dt.Columns)
 				lst[c.ColumnName] = r == null ? null : r[c];
-			lst["$RowIndex"] = x;
+			lst["$RowIndex"] = r == null ? -1 : dt.Rows.IndexOf(r);
 			lock (Program.Shared.LockVariables){
 				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = lst;
 			}
