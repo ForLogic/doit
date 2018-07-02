@@ -218,7 +218,9 @@ namespace DoIt
 			var pattern = "\\{(?<tag>" + tag.Replace("$", "\\$").Replace(".", "\\.") + ")(?<params>\\:+.+?)*\\}";
 			var tagLower = tag.ToLower();
 			var m = Regex.Match(str, pattern);
+			var oldData = data;
 			while (m != null && m.Success){
+				data = oldData;
 				var p = m.Groups["params"];
 				if (!p.Success){
 					var valueStr = null as string;
