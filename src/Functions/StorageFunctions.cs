@@ -90,11 +90,11 @@ namespace DoIt.Functions
 			var blobUri = Program.Shared.ReplaceTags(Util.GetStr(n, "uri"));
 			var toFile = Program.Shared.ReplaceTags(Util.GetStr(n, "toFile"));
 			var sas = Program.Shared.ReplaceTags(Util.GetStr(n, "sharedAccessSignature"));
-			var snapshotTime = Util.ParseDateTime(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime")));
-			if(!string.IsNullOrEmpty(blobName)){
+			var snapshotTime = Util.ParseDateTimeOffset(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime")));
+			if (!string.IsNullOrEmpty(blobName)){
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
-				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1) + (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null), snapshotTime);
+				var blob = GetBlobReference(blobContainer, blobName.Substring(blobName.IndexOf("/") + 1), sas, snapshotTime);
 				if (blob.Exists()){
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
@@ -103,7 +103,7 @@ namespace DoIt.Functions
 				}
 			}
 			if(!string.IsNullOrEmpty(blobUri)){
-				var blob = new CloudBlob(new Uri(blobUri+ (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)), snapshotTime, null as CloudBlobClient);
+				var blob = GetBlobReference(blobUri, sas, snapshotTime);
 				if (blob.Exists()){
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
@@ -111,6 +111,26 @@ namespace DoIt.Functions
 					blob.DownloadToFile(toFile, FileMode.Create);
 				}
 			}
+		}
+
+		CloudBlockBlob GetBlobReference(CloudBlobContainer container, string blobName, string sasKey = null, DateTimeOffset? snapshotTime = null)
+		{
+			if (container == null || string.IsNullOrEmpty(blobName))
+				return null;
+			var sasString = !string.IsNullOrEmpty(sasKey) && Program.Shared.SharedAccessSignatures.ContainsKey(sasKey) ? Program.Shared.SharedAccessSignatures[sasKey] : "";
+			return snapshotTime == null ?
+				container.GetBlockBlobReference(blobName + sasString):
+				container.GetBlockBlobReference(blobName + sasString, snapshotTime);
+		}
+
+		CloudBlockBlob GetBlobReference(string blobUri, string sasKey = null, DateTimeOffset? snapshotTime = null)
+		{
+			var snapshotString = snapshotTime == null ? "" : string.Format("?snapshot={0:yyyy-MM-ddTHH:mm:ss.fffffffZ}", snapshotTime.Value.UtcDateTime);
+			var sasString = string.IsNullOrEmpty(sasKey) || !Program.Shared.SharedAccessSignatures.ContainsKey(sasKey) ? "" : Program.Shared.SharedAccessSignatures[sasKey];
+			if (!string.IsNullOrEmpty(snapshotString) && !string.IsNullOrEmpty(sasString) && sasString.StartsWith("?"))
+				sasString = "&" + sasString.Remove(0, 1);
+			var uri = new Uri(blobUri + snapshotString + sasString);
+			return new CloudBlockBlob(uri);
 		}
 
 		// list blobs
