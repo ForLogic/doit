@@ -258,7 +258,8 @@ namespace DoIt
 				foreach (var v in array)
 					if (!string.IsNullOrEmpty(v) && !v.StartsWith(">"))
 						switch (v.ToLower()){
-							case "filename": data = Path.GetFileName(Convert.ToString(data)); break;
+							case "onlypathchars": data = Convert.ToString(data).OnlyPathChars(); break;
+							case "filename": data = Convert.ToString(data).GetFileName(); break;
 							case "fileextension": data = Convert.ToString(data).GetFileExtension(); break;
 							default: data = string.Format($"{{0:{v}}}", data); break;
 						}

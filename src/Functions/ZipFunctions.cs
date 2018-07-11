@@ -92,18 +92,19 @@ namespace DoIt.Functions
 			var zipEntry = Program.Shared.ReplaceTags(Util.GetStr(n, "zipEntry"), lstCurrentRows);
 			var zipFolder = Program.Shared.ReplaceTags(Util.GetStr(n, "zipFolder"), lstCurrentRows);
 			var zipFilename = Program.Shared.ReplaceTags(Util.GetStr(n, "zipFilename"), lstCurrentRows);
+			var dirSeparators = new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 			if (!string.IsNullOrEmpty(zipEntry))
-				zipEntry = zipEntry.Split(new char[]{'/','\\'}, StringSplitOptions.RemoveEmptyEntries).Select(s => s.GetFileName()).Concat(s => s, "/");
+				zipEntry = zipEntry.Split(dirSeparators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.OnlyPathChars()).Concat(s => s, "/");
 			else if (!string.IsNullOrEmpty(zipFilename)){
 				if(!string.IsNullOrEmpty(zipFolder))
-					zipFolder = zipFolder.Split(new char[]{'/','\\'}, StringSplitOptions.RemoveEmptyEntries).Select(s => s.GetFileName()).Concat(s => s, "/");
-				zipEntry = string.IsNullOrEmpty(zipFolder) ? zipFilename : zipFolder+"/"+zipFilename.GetFileName();
+					zipFolder = zipFolder.Split(dirSeparators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.OnlyPathChars()).Concat(s => s, "/");
+				zipEntry = string.IsNullOrEmpty(zipFolder) ? zipFilename : zipFolder+"/"+zipFilename.OnlyPathChars();
 			}
 			if (string.IsNullOrEmpty(zipEntry))
 				zipEntry = defaultValue;
 			if (string.IsNullOrEmpty(zipEntry))
 				return null;
-			return string.Join("/", zipEntry.Split(new char[]{Path.DirectorySeparatorChar,'/'},StringSplitOptions.RemoveEmptyEntries).Select(str => str.GetFileName()));
+			return string.Join("/", zipEntry.Split(dirSeparators, StringSplitOptions.RemoveEmptyEntries).Select(str => str.OnlyPathChars()));
 		}
 
 		void AddFile(ZipOutputStream zipStream, XmlNode n){

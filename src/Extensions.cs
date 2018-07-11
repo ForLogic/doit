@@ -92,12 +92,25 @@ namespace DoIt
 			return str.ReplaceAll(lst1.ToCharArray().ToList(), lst2.ToCharArray().ToList());
 		}
 
-		public static String GetFileName(this String str, Boolean toLower = false)
+		public static String OnlyPathChars(this String str, Boolean toLower = false)
 		{
 			if (String.IsNullOrEmpty(str))
 				return str;
-			var filename = str.RemoveAccents().OnlyChars("0123456789abcdefghijklmnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVXWYZ_- ().", "_");
-			return toLower? filename.ToLower() : filename;
+			var charsToKeep = "0123456789abcdefghijklmnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVXWYZ_- ().";
+			var result = str.RemoveAccents().OnlyChars(charsToKeep, "_");
+			return toLower? result.ToLower() : result;
+		}
+
+		public static String GetFileName(this String str, Boolean toLower = false, Boolean onlyPathChars = true)
+		{
+			if (String.IsNullOrEmpty(str))
+				return str;
+			var dirSeparators = new char[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar };
+			var array = str.Split(dirSeparators, StringSplitOptions.RemoveEmptyEntries);
+			var filename = array.LastOrDefault();
+			if (onlyPathChars)
+				filename = filename.OnlyPathChars();
+			return toLower ? filename.ToLower() : filename;
 		}
 
 		public static String GetFileExtension(this String str, Boolean toLower = false)
@@ -105,9 +118,9 @@ namespace DoIt
 			if (String.IsNullOrEmpty(str))
 				return null;
 			var index = str.LastIndexOf('.');
-			if (index == -1)
+			if (index == -1 || index == str.Length - 1)
 				return null;
-			var extension = str.Substring(index);
+			var extension = str.Substring(index).OnlyPathChars();
 			return toLower ? extension.ToLower() : extension;
 		}
 
