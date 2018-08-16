@@ -12,6 +12,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
 3. [Execute Commands](#ExecuteCommands)
     1. [Database](#ExecuteDatabase)
         * [Backup](#ExecuteDatabaseBackup)
+        * BackupLog
     2. [Zip](#ExecuteZip)
         * [AddFile](#ExecuteZipAddFile)
         * [AddBlob](#ExecuteZipAddBlob)
@@ -69,10 +70,13 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
         * [SetMetadata] _(Waiting documentation)_
         * [Snapshot] _(Waiting documentation)_
     16. [Condition](#ExecuteCondition)
-    17. Ftp _(To-Do)_
-        * Download
-        * Upload
-        * ListFiles
+    17. [Ftp](#ExecuteFtp)
+        * [List](#ExecuteFtpList)
+        * [Download](#ExecuteFtpDownload)
+        * [Upload](#ExecuteFtpUpload)
+        * [CreateFolder](#ExecuteFtpCreateFolder)
+        * [DeleteFolder](#ExecuteFtpDeleteFolder)
+        * [DeleteFile](#ExecuteFtpDeleteFile)
     18. Services _(To-Do)_
         * Start
         * Stop
@@ -88,7 +92,7 @@ C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml"
 ### <a id="TheConfigurationFileExample">Example</a>
 Here is a configuration file example.
 Please use the full documentation for more commands or options.
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
 
@@ -169,7 +173,7 @@ C:\DoIt\DoIt.exe /config="C:\DoIt\AnotherConfigFile.config.xml" /cryptKey="test1
 Use this tag to specify the log path and variable.
 
 *Tag Location: Configuration > Settings > LogFile*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Settings>
@@ -182,7 +186,7 @@ Use this tag to specify the log path and variable.
 This tag set database and azure storage account connection strings.
 
 *Tag Location: Configuration > Settings > ConnectionStrings*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Settings>
@@ -199,7 +203,7 @@ This tag set database and azure storage account connection strings.
 Use this tag to mail users if an exception occurs.
 
 *Tag Location: Configuration > Settings > Exceptions*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Settings>
@@ -219,7 +223,7 @@ Use this tag to mail users if an exception occurs.
 Backup SQL Server databases.
 
 *Tag Location: Configuration > Execute > Database > Backup*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -236,7 +240,7 @@ Backup SQL Server databases.
 Add a new file to the specified zip package.
 
 *Tag Location: Configuration > Execute > Zip > AddFile*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -252,7 +256,7 @@ Add a new file to the specified zip package.
 Download blob from a storage account and add it to the specified zip package.
 
 *Tag Location: Configuration > Execute > Zip > AddBlob*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -268,7 +272,7 @@ Download blob from a storage account and add it to the specified zip package.
 Extract a zip package to the specified folder.
 
 *Tag Location: Configuration > Execute > Zip > Extract*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -285,7 +289,7 @@ Extract a zip package to the specified folder.
 Starts an external application.
 
 *Tag Location: Configuration > Execute > Process > Start*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -300,7 +304,7 @@ Starts an external application.
 Kills an executing process.
 
 *Tag Location: Configuration > Execute > Process > Kill*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -322,7 +326,7 @@ List the executing processes. The returned datatable will contain the following 
 * filename (string)
 
 Tag Location: Configuration > Execute > Process > List
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -339,7 +343,7 @@ Tag Location: Configuration > Execute > Process > List
 Execute SQL commands.
 
 *Tag Location: Configuration > Execute > Sql > Execute*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -354,7 +358,7 @@ Execute SQL commands.
 Execute SQL queries and set the results to the specified variable.
 
 *Tag Location: Configuration > Execute > Sql > Select*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -371,7 +375,7 @@ Execute SQL queries and set the results to the specified variable.
 Execute the SQL command/query and set the result to the specified variable.
 
 *Tag Location: Configuration > Execute > Sql > Scalar*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -388,7 +392,7 @@ Execute the SQL command/query and set the result to the specified variable.
 Send an e-mail.
 
 *Tag Location: Configuration > Execute > Mail*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -412,7 +416,7 @@ Send an e-mail.
 Loop throught the rows in the specified table.
 
 *Tag Location: Configuration > Execute > ForEach*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -427,7 +431,7 @@ Loop throught the rows in the specified table.
 Write a new line to the previously specified log file.
 
 *Tag Location: Configuration > Execute > Log*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -440,7 +444,7 @@ Write a new line to the previously specified log file.
 Block the current thread for the specified time.
 
 *Tag Location: Configuration > Execute > Sleep*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -453,7 +457,7 @@ Block the current thread for the specified time.
 Throw a new exception.
 
 *Tag Location: Configuration > Execute > Exception*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -466,7 +470,7 @@ Throw a new exception.
 Try to run some commands for the specified retry times.
 
 *Tag Location: Configuration > Execute > Try*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -492,7 +496,7 @@ Try to run some commands for the specified retry times.
 Write a new line in the specified csv file.
 
 *Tag Location: Configuration > Execute > Csv > WriteLine*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -520,7 +524,7 @@ Write a new line in the specified csv file.
 Write the datatable to the specified csv file.
 
 *Tag Location: Configuration > Execute > Csv > WriteData*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -539,7 +543,7 @@ Write the datatable to the specified csv file.
 Load the specified csv file to a new datatable.
 
 *Tag Location: Configuration > Execute > Csv > Load*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -556,7 +560,7 @@ Load the specified csv file to a new datatable.
 Count the rows found in the specified table.
 
 *Tag Location: Configuration > Execute > DataTable > Count*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -571,7 +575,7 @@ Count the rows found in the specified table.
 Sum values from the rows in the specified table
 
 *Tag Location: Configuration > Execute > DataTable > Sum*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -586,7 +590,7 @@ Sum values from the rows in the specified table
 Calculate the average values from the rows in the specified table.
 
 *Tag Location: Configuration > Execute > DataTable > Avg*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -601,7 +605,7 @@ Calculate the average values from the rows in the specified table.
 Get the min value from the rows in the specified table.
 
 *Tag Location: Configuration > Execute > DataTable > Min*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -616,7 +620,7 @@ Get the min value from the rows in the specified table.
 Get the max value from the rows in the specified table.
 
 *Tag Location: Configuration > Execute > DataTable > Max*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -631,7 +635,7 @@ Get the max value from the rows in the specified table.
 Set values on the specified columns/rows.
 
 *Tag Location: Configuration > Execute > DataTable > SetRowValue*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -648,7 +652,7 @@ Set values on the specified columns/rows.
 Find the rows that matches the where condition and set one of them to the specified variable.
 
 *Tag Location: Configuration > Execute > DataTable > GetDataRow*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -663,7 +667,7 @@ Find the rows that matches the where condition and set one of them to the specif
 Create a new datatable with the rows existing in one datatable and not in other.
 
 *Tag Location: Configuration > Execute > DataTable > Diff*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -678,7 +682,7 @@ Create a new datatable with the rows existing in one datatable and not in other.
 Create a new datatable with the rows from other datatables.
 
 *Tag Location: Configuration > Execute > DataTable > Join*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -693,7 +697,7 @@ Create a new datatable with the rows from other datatables.
 Create a new datatable only with the rows existing in all specified datatables.
 
 *Tag Location: Configuration > Execute > DataTable > Intersect*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -708,7 +712,7 @@ Create a new datatable only with the rows existing in all specified datatables.
 Remove rows from the datatable when it matches the where clause.
 
 *Tag Location: Configuration > Execute > DataTable > RemoveRows*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -723,7 +727,7 @@ Remove rows from the datatable when it matches the where clause.
 Insert a new row in the specified datatable.
 
 *Tag Location: Configuration > Execute > DataTable > InsertRow*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -742,7 +746,7 @@ Insert a new row in the specified datatable.
 Filter rows in the specified datatable.
 
 *Tag Location: Configuration > Execute > DataTable > Filter*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -759,7 +763,7 @@ Filter rows in the specified datatable.
 Execute a simple operation using the specified values.
 
 *Tag Location: Configuration > Execute > SetValue > Calc*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -774,7 +778,7 @@ Execute a simple operation using the specified values.
 Execute a date operation using the specified values.
 
 *Tag Location: Configuration > Execute > SetValue > CalcDate*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -789,7 +793,7 @@ Execute a date operation using the specified values.
 Set the value to the specified string variable.
 
 *Tag Location: Configuration > Execute > SetValue > String*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -804,7 +808,7 @@ Set the value to the specified string variable.
 Set the date/time value to the specified variable.
 
 *Tag Location: Configuration > Execute > SetValue > Date*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -831,7 +835,7 @@ Query files from a folder. The returned datatable contains the following columns
 The columns creation_time, last_write_time and length will only be filled if the parameter "fetchAttributes" is set to "true".
 
 *Tag Location: Configuration > Execute > LocalDisk > ListFiles*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -846,7 +850,7 @@ The columns creation_time, last_write_time and length will only be filled if the
 Change the name from the specified file or move it to another parent folder.
 
 *Tag Location: Configuration > Execute > LocalDisk > MoveFile*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -861,7 +865,7 @@ Change the name from the specified file or move it to another parent folder.
 Change the name from the specified folder or move it to another parent folder.
 
 *Tag Location: Configuration > Execute > LocalDisk > MoveFolder*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -876,7 +880,7 @@ Change the name from the specified folder or move it to another parent folder.
 Copy the specified file to another file.
 
 *Tag Location: Configuration > Execute > LocalDisk > CopyFile*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -891,7 +895,7 @@ Copy the specified file to another file.
 Delete the specified file.
 
 *Tag Location: Configuration > Execute > LocalDisk > DeleteFile*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -906,7 +910,7 @@ Delete the specified file.
 Delete the specified folder.
 
 *Tag Location: Configuration > Execute > LocalDisk > DeleteFolder*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -923,7 +927,7 @@ Delete the specified folder.
 Upload a file to the specified Azure storage account.
 
 *Tag Location: Configuration > Execute > Storage > Upload*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -938,7 +942,7 @@ Upload a file to the specified Azure storage account.
 Download the specified file.
 
 *Tag Location: Configuration > Execute > Storage > Download*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -968,7 +972,7 @@ Query blobs and set the resulting list to a variable. The returned datatable con
 The columns with the name starting with "metadata_" will only be filled with the blob metadata if the parameter "details" contains the option "metadata" or the parameter "fetchAttributes" is set to "true".
 
 *Tag Location: Configuration > Execute > Storage > ListBlobs*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -983,7 +987,7 @@ The columns with the name starting with "metadata_" will only be filled with the
 Copies a blob from one storage account to another.
 
 *Tag Location: Configuration > Execute > Storage > Copy*
-```html
+```xml
 <?xml version="1.0" encoding="utf-16" ?>
 <Configuration>
   <Execute>
@@ -1006,7 +1010,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 *Tag Location: Configuration > Execute > Condition*
 
 #### Sample1 - Condition Type: has-disk-space
-```html
+```xml
 <Condition type="has-disk-space" drive="C:\" min="10000">
   <True>
     <Log>True Result</Log>
@@ -1015,7 +1019,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 ```
 
 #### Sample2 - Condition Type: file-exists
-```html
+```xml
 <Condition type="file-exists" path="C:\MyFile.txt">
   <True>
     <Log>True Result</Log>
@@ -1024,7 +1028,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 ```
 
 #### Sample3 - Condition Type folder-exists
-```html
+```xml
 <Condition type="folder-exists" path="C:\MyFolder">
   <True>
     <Log>True Result</Log>
@@ -1033,7 +1037,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 ```
 
 #### Sample4 - Condition Type: has-rows
-```html
+```xml
 <Condition type="has-rows" data="customers_list">
   <True>
     <Log>True Result</Log>
@@ -1042,7 +1046,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 ```
 
 #### Sample5 - Condition Type: is-datetime
-```html
+```xml
 <Condition type="is-datetime" days="all|mon|wed|fri|1|15" time="08-12">
   <True>
     <Log>True Result</Log>
@@ -1051,7 +1055,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
 ```
 
 #### Sample6 - Condition Type: if
-```html
+```xml
 <Condition type="if" value1="{files_count}" value2="0" comparison="greater" valueType="numeric">
   <True>
     <Log>True Result</Log>
@@ -1060,4 +1064,101 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
     <Log>False Result</Log>
   </False>
 </Condition>
+```
+
+### <a id="ExecuteFtp">Ftp</a>
+
+#### <a id="ExecuteFtpList">List</a>
+List all files of a given folder using the connection data provided. The returned datatable contains the following columns:
+
+* name (string)
+* type (string) = "folder" | "file"
+* length (long)
+* datetime (DateTime)
+
+*Tag Location: Configuration > Execute > Ftp > List*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <List path="wwwroot" to="files_list" />
+    </Ftp>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteFtpDownload">Download</a>
+Download the specified file using the connection data provided.
+
+*Tag Location: Configuration > Execute > Ftp > Download*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <Download path="wwwroot/myfile.zip" toFile="%programdata%\DoIt\myfile.zip" />
+    </Ftp>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteFtpUpload">Upload</a>
+Upload the specified file using the connection data provided.
+
+*Tag Location: Configuration > Execute > Ftp > Upload*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <Upload file="%programdata%\DoIt\myfile.zip" toPath="wwwroot/myfile.zip"  />
+    </Ftp>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteFtpCreateFolder">CreateFolder</a>
+Create the specified folders using the connection data provided.
+
+*Tag Location: Configuration > Execute > Ftp > CreateFolder*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <CreateFolder path="wwwroot/myfolder/level2/level3" />
+    </Ftp>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteFtpDeleteFolder">DeleteFolder</a>
+Delete the specified folder using the connection data provided.
+
+*Tag Location: Configuration > Execute > Ftp > DeleteFolder*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <DeleteFolder path="wwwroot/myfolder" />
+    </Ftp>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteFtpDeleteFile">DeleteFile</a>
+Delete the specified file using the connection data provided.
+
+*Tag Location: Configuration > Execute > Ftp > DeleteFile*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Ftp host="ftps://mydomain.com" port="21" user="user_name" password="password123">
+      <DeleteFile path="wwwroot/myfile.zip" />
+    </Ftp>
+  </Execute>
+</Configuration>
 ```
