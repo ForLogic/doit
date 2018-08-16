@@ -250,6 +250,7 @@ namespace DoIt
 						case "try": new TryFunctions(subNode).Execute(); break;
 						case "exception": new ExceptionFunctions(subNode).Execute(); break;
 						case "http": new HttpFunctions(subNode).Execute(); break;
+						case "ftp": new FtpFunctions(subNode).Execute(); break;
 						case "stop": return true;
 					}
 				}

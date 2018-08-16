@@ -119,6 +119,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Functions\FtpFunctions.cs" />
     <Compile Include="Functions\HttpFunctions.cs" />
     <Compile Include="Functions\LogFunctions.cs" />
     <Compile Include="Functions\ForEachFunctions.cs" />
