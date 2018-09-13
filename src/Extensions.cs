@@ -82,6 +82,16 @@ namespace DoIt
 			return count;
 		}
 
+        public static bool StartsWith(this string str, params string[] list)
+        {
+            if (str == null || list == null)
+                return false;
+            foreach (var item in list)
+                if (str.StartsWith(item))
+                    return true;
+            return false;
+        }
+
 		public static String RemoveAccents(this String str)
 		{
 			if (String.IsNullOrEmpty(str))

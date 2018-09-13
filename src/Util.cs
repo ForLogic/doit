@@ -367,16 +367,87 @@ namespace DoIt
 		{
 			if (String.IsNullOrEmpty(days))
 				return false;
-			var array = days.Split(new string[] { ",", ";", " ", "|" }, StringSplitOptions.RemoveEmptyEntries);
+			var array = days.ToLower().Split(new string[] { ",", ";", "|" }, StringSplitOptions.RemoveEmptyEntries).Select(d => d.Trim()).ToArray();
 			if (array.Contains("all") || array.Contains(Convert.ToString(DateTime.Today.Day)))
 				return true;
-			var lst = new List<String>() { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
-			if (array.Select(item => lst.IndexOf(item)).Any(index => index == Convert.ToInt32(DateTime.Today.DayOfWeek)))
+			var lst1 = new List<String>() { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
+            var lst2 = new List<String>() { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+            var currentIndex = Convert.ToInt32(DateTime.Today.DayOfWeek);
+            if (array.Select(item => lst1.IndexOf(item)).Any(index => index == currentIndex) ||
+                array.Select(item => lst2.IndexOf(item)).Any(index => index == currentIndex))
 				return true;
+
+            foreach (var item in array)
+            {
+                var m = Regex.Match(item, "^(?<g1>1st|first|2nd|second|3rd|third|4th|fourth|last) (?<g2>sun|sunday|mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday)$", RegexOptions.IgnoreCase);
+                if (!m.Success)
+                    continue;
+                var index = m.Groups["g1"].Value;
+                var dayOfWeek = m.Groups["g2"].Value;
+                if (IsDayOfWeek(dayOfWeek, index))
+                    return true;
+            }
 			return false;
 		}
 
-		public static DateTime GetDateTime(string timespan, DateTime? date = null)
+        public static bool IsDayOfWeek(string dayOfWeek, string index)
+        {
+            var m1 = Regex.Match(dayOfWeek, "^(?<g0>sun|sunday)|(?<g1>mon|monday)|(?<g2>tue|tuesday)|(?<g3>wed|wednesday)|(?<g4>thu|thursday)|(?<g5>fri|friday)|(?<g6>sat|saturday)$", RegexOptions.IgnoreCase);
+            var m2 = Regex.Match(index, "^(?<g1>1st|first)|(?<g2>2nd|second)|(?<g3>3rd|third)|(?<g4>4th|fourth)|(?<g5>last)$", RegexOptions.IgnoreCase);
+            if (!m1.Success || !m2.Success)
+                return false;
+
+            var g1Name = "";
+            for (var x = 0; x < 7; x++)
+                if (m1.Groups["g" + x].Success){
+                    g1Name = "g" + x;
+                    break;
+                }
+            var g2Name = "";
+            for (var x = 1; x < 6; x++)
+                if (m2.Groups["g" + x].Success){
+                    g2Name = "g" + x;
+                    break;
+                }
+
+            var g1 = m1.Groups[g1Name];
+            var g2 = m2.Groups[g2Name];
+
+            var d1 = Convert.ToInt32(g1Name.Remove(0, 1));
+            var i1 = Convert.ToInt32(g2Name.Remove(0, 1));
+
+            var d = DateTime.Today;
+            var dw = Convert.ToInt32(d.DayOfWeek);
+            if (dw != d1)
+                return false;
+
+            var dwIndex = GetDayOfWeekMonthIndex(d);
+            var isLastDW = IsLastDayOfWeekInMonth(d);
+
+            return
+                (i1 < 5 && i1 == dwIndex) ||
+                (i1 == 5 && isLastDW);
+        }
+
+        public static int GetDayOfWeekMonthIndex(DateTime date)
+        {
+            var m = date.Month;
+            var counter = 0;
+            while (date.Month == m){
+                date = date.AddDays(-7);
+                counter++;
+            }
+            return counter;
+        }
+
+         public static bool IsLastDayOfWeekInMonth(DateTime date)
+        {
+            var m = date.Month;
+            date = date.AddDays(7);
+            return date.Month != m;
+        }
+
+       public static DateTime GetDateTime(string timespan, DateTime? date = null)
 		{
 			return GetDateTimeOffset(timespan, new DateTimeOffset(date == null ? DateTime.Now : date.Value)).DateTime;
 		}
