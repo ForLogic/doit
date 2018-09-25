@@ -1053,7 +1053,7 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
   </True>
 </Condition>
 
-<Condition type="is-datetime" days="1st sunday, 2nd mon, last friday">
+<Condition type="is-datetime" days="1st sunday, 2nd mon, 2018-09-25, last friday">
   <True>
     <Log>True Result</Log>
   </True>
