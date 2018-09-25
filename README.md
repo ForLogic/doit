@@ -1052,6 +1052,16 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
     <Log>True Result</Log>
   </True>
 </Condition>
+
+<Condition type="is-datetime" days="1st sunday, 2nd mon, last friday">
+  <True>
+    <Log>True Result</Log>
+  </True>
+  <False>
+    <Log>False Result</Log>
+  </False>
+</Condition>
+
 ```
 
 #### Sample6 - Condition Type: if
