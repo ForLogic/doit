@@ -379,11 +379,21 @@ namespace DoIt
 
             foreach (var item in array)
             {
-                var m = Regex.Match(item, "^(?<g1>1st|first|2nd|second|3rd|third|4th|fourth|last) (?<g2>sun|sunday|mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday)$", RegexOptions.IgnoreCase);
-                if (!m.Success)
+				var m1 = Regex.Match(item, "^(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})$");
+				if (m1.Success) {
+					var y = Convert.ToInt32(m1.Groups["year"].Value);
+					var m = Convert.ToInt32(m1.Groups["month"].Value);
+					var d = Convert.ToInt32(m1.Groups["day"].Value);
+					var date = new DateTime(y, m, d);
+					if (date.CompareTo(DateTime.Today) == 0)
+						return true;
+					continue;
+				}
+                var m2 = Regex.Match(item, "^(?<g1>1st|first|2nd|second|3rd|third|4th|fourth|last) (?<g2>sun|sunday|mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday)$", RegexOptions.IgnoreCase);
+                if (!m2.Success)
                     continue;
-                var index = m.Groups["g1"].Value;
-                var dayOfWeek = m.Groups["g2"].Value;
+                var index = m2.Groups["g1"].Value;
+                var dayOfWeek = m2.Groups["g2"].Value;
                 if (IsDayOfWeek(dayOfWeek, index))
                     return true;
             }
