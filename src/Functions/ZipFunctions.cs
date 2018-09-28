@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -153,7 +154,7 @@ namespace DoIt.Functions
 					size = blob.Properties.Length;
 				}
 				zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=(dateTime??DateTimeOffset.Now).DateTime, Size=size});
-				blob.DownloadToStream(zipStream);
+				blob.DownloadToStream(zipStream, null, new BlobRequestOptions() { DisableContentMD5Validation = true });
 				Program.Shared.WriteLogLine(String.Format("Add Blob to Zip (Blob: {0}; Blob Size: {1}).", blob.Uri.ToString(), Util.GetFileSize(size)));
 			}
 		}

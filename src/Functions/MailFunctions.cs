@@ -35,7 +35,7 @@ namespace DoIt.Functions
 			if (String.IsNullOrEmpty(to) || String.IsNullOrEmpty(host))
 				return false;
 			var subject = Util.GetStr(Node, "subject", "DoIt - Task Script").Trim();
-			var body = Util.GetStr(Node, "Body");
+			var body = Program.Shared.ReplaceTags(Util.GetStr(Node, "Body"));
 			var from = Util.GetConfigData(smtp, "from");
 			var port = Convert.ToInt32(Util.GetConfigData(smtp,"port",false,"25"));
 			var ssl = Util.GetConfigData(smtp, "ssl") == "true";
