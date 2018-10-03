@@ -62,29 +62,25 @@ namespace DoIt.Functions
 
 		void Upload(XmlNode n, string host, string port, string user, string pass)
 		{
-			var toPath = Program.Shared.ReplaceTags(Util.GetStr(n, "toPath"));
 			var file = Program.Shared.ReplaceTags(Util.GetStr(n, "file"));
-			var rqt = GetFtpRequest(host, port, user, pass, WebRequestMethods.Ftp.UploadFile, toPath);
+			var toPath = Program.Shared.ReplaceTags(Util.GetStr(n, "toPath"));
+			var path = GetPathFromURL(host);
+			host = host.Replace(path, "");
+			var filename = Path.GetFileName(toPath);
+			path = CombinePaths(path, toPath.Replace(filename, ""));
+			CreateFolder(host, port, user, pass, path);
+			path = CombinePaths(path, filename);
+			var rqt = GetFtpRequest(host, port, user, pass, WebRequestMethods.Ftp.UploadFile, path);
 			using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
 			using (var rs = rqt.GetRequestStream())
 				fs.CopyTo(rs);
+			Program.Shared.WriteLogLine($"Ftp file uploaded: {file} to host/path {host}/{toPath}");
 		}
 
 		void CreateFolder(XmlNode n, string host, string port, string user, string pass)
 		{
 			var path = Program.Shared.ReplaceTags(Util.GetStr(n, "path"));
-			var lstPaths = path.Split('/', '\\');
-			for (var x=0; x<lstPaths.Length; x++) {
-				var basePath = lstPaths.Where((string str, int index) => index < x).Concat(str => str, "/") ?? "/";
-				var newFolder = lstPaths[x];
-				var dt = GetList(host, port, user, pass, basePath);
-				var rows = dt.Select($"type='folder' and name='{newFolder}'");
-				if (rows.Length > 0)
-					continue;
-				var rqt = GetFtpRequest(host, port, user, pass, WebRequestMethods.Ftp.MakeDirectory, basePath + "/" + newFolder);
-				using (var rs = rqt.GetResponse() as FtpWebResponse)
-					Program.Shared.WriteLogLine($"Ftp folder created: {path} - Response status code: {rs.StatusCode}");
-			}
+			CreateFolder(host, port, user, pass, path);
 		}
 
 		void DeleteFolder(XmlNode n, string host, string port, string user, string pass)
@@ -143,6 +139,39 @@ namespace DoIt.Functions
 			rqt.EnableSsl = host.ToLower().StartsWith("ftps:");
 			rqt.Credentials = new NetworkCredential(user, pass);
 			return rqt;
+		}
+
+		void CreateFolder(string host, string port, string user, string pass, string path)
+		{
+			var lstPaths = path.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+			for (var x = 0; x < lstPaths.Length; x++)
+			{
+				var basePath = lstPaths.Where((string str, int index) => index < x).Concat(str => str, "/") ?? "/";
+				var newFolder = lstPaths[x];
+				var dt = GetList(host, port, user, pass, basePath);
+				var rows = dt.Select($"type='folder' and name='{newFolder}'");
+				if (rows.Length > 0)
+					continue;
+				var rqt = GetFtpRequest(host, port, user, pass, WebRequestMethods.Ftp.MakeDirectory, basePath + "/" + newFolder);
+				using (var rs = rqt.GetResponse() as FtpWebResponse)
+					Program.Shared.WriteLogLine($"Ftp folder created: {path} - Response status code: {rs.StatusCode}");
+			}
+		}
+
+		string GetPathFromURL(string url)
+		{
+			var uri = new Uri(url);
+			return uri.AbsolutePath;
+		}
+
+		string CombinePaths(params string[] paths)
+		{
+			if (paths == null || paths.Length == 0)
+				return null;
+			var rs = "";
+			foreach (var str in paths)
+				rs += (rs.EndsWith("/") || str.StartsWith("/") ? "" : "/") + str;
+			return rs;
 		}
 
 		Uri GetUri(string host, string port, string user, string pass, string path)
