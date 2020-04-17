@@ -542,16 +542,18 @@ namespace DoIt
 			return lstAllFiles.ToArray();
 		}
 
-		public static string GetFileToSend(String filename, Boolean zipFile)
+		public static string GetFileToSend(String filename, Boolean zipFile, String zipEntryName = null)
 		{
 			if (!zipFile)
 				return filename;
 			var zipFilename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".zip");
 			if (File.Exists(zipFilename))
 				File.Delete(zipFilename);
+			if (string.IsNullOrEmpty(zipEntryName))
+				zipEntryName = Path.GetFileName(filename);
 			using (var zipStream = new ZipOutputStream(File.Create(zipFilename))){
 				var fi = new FileInfo(filename);
-				zipStream.PutNextEntry(new ZipEntry(Path.GetFileName(filename)){DateTime=fi.LastWriteTime, Size=fi.Length});
+				zipStream.PutNextEntry(new ZipEntry(zipEntryName) {DateTime=fi.LastWriteTime, Size=fi.Length});
 				using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 					fs.CopyTo(zipStream);
 			}

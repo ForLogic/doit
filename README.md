@@ -403,7 +403,7 @@ Send an e-mail.
       <Attachments>
         <File path="C:\MyFileToSend.txt" />
         <File path="C:\My2ndAttachment.txt" />
-        <SqlQuery database="1" dataFormat="csv|json|xml">
+        <SqlQuery database="1" dataFormat="csv|json|xml" zip="true|false" attachmentName="" zipEntryName="">
           select t.id, t.total, t.date from orders t where t.date>=cast(getdate() as date)
         </SqlQuery>
       </Attachments>

@@ -355,7 +355,7 @@ namespace DoIt
 			}
 			if (data is Boolean || data is Nullable<Boolean>)
 				return Convert.ToBoolean(data) ? "True" : "False";
-			return Convert.ToString(data).Replace("\"", "\\\"");
+			return Convert.ToString(data).Replace("\"", "\\\"").Replace(Environment.NewLine, " ").Replace("\r\n", " ").Replace("\n", " ");
 		}
 
 		static String GetValueToXML(Object data)

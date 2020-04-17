@@ -67,17 +67,19 @@ namespace DoIt.Functions
 						var dt = Util.Select(sql, Program.Shared.Databases[database]);
 						if (required && dt.Rows.Count == 0)
 							continue;
-						var dataFormat=Util.GetStr(n, "dataFormat", "csv").ToLower();
+						var dataFormat = Util.GetStr(n, "dataFormat", "csv").ToLower();
 						if(!dataFormat.In("csv", "xml", "json"))
 							dataFormat = "csv";
 						var tempFile = Util.GetTempFileName(dataFormat);
-						using (var fs = File.CreateText(tempFile))
+						using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
+						using (var sw = new StreamWriter(fs, Encoding.Default))
 							switch (dataFormat){
-								case "csv": fs.Write(dt.ToCSV()); break;
-								case "xml": fs.Write(dt.ToXML()); break;
-								case "json": fs.Write(dt.ToJSON()); break;
+								case "csv": sw.Write(dt.ToCSV()); break;
+								case "xml": sw.Write(dt.ToXML()); break;
+								case "json": sw.Write(dt.ToJSON()); break;
 							}
-						filename = Util.GetFileToSend(tempFile, Util.GetStr(n, "zip", "false").ToLower() == "true");
+						var zipEntryName = Util.GetStr(n, "zipEntryName", tempFile);
+						filename = Util.GetFileToSend(tempFile, Util.GetStr(n, "zip", "false").ToLower() == "true", zipEntryName);
 						lstFilesToDelete.Add(tempFile);
 						lstFilesToDelete.Add(filename);
 					}
