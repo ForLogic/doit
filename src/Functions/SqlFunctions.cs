@@ -21,40 +21,43 @@ namespace DoIt.Functions
 		{
 			if (Node == null)
 				return false;
-			Action<SqlConnection, List<XmlNode>> runSQL = (SqlConnection conn, List<XmlNode> lstNodes) => {
-				using (var trans = conn.BeginTransaction()){
+			Action<SqlConnection, bool, List<XmlNode>> runSQL = (SqlConnection conn, bool startTransaction, List<XmlNode> lstNodes) => {
+				using (var trans = startTransaction ? conn.BeginTransaction() : null){
 					var commit = false;
 					foreach (XmlNode n in lstNodes){
 						var tagName = String.IsNullOrWhiteSpace(n.Name) ? null : n.Name.ToLower();
 						if(tagName == "execute")
-							commit = Execute(trans, n);
+							commit = Execute(conn, trans, n);
 						else if(tagName == "scalar")
-							commit = Scalar(trans, n);
+							commit = Scalar(conn, trans, n);
 						else if(tagName == "select")
-							Select(trans, n);
+							Select(conn, trans, n);
 					}
-					if (commit) trans.Commit();
-					else trans.Rollback();
+					if (trans != null){
+						if (commit) trans.Commit();
+						else trans.Rollback();
+					}
 				}
 			};
 			var database = Util.GetStr(Node, "database");
+			var transaction = Util.GetStr(Node, "transaction", "true").ToLower() == "true";
 			using (var conn = new SqlConnection(Program.Shared.Databases[database])){
 				conn.Open();
-				runSQL(conn, Node.ChildNodes.Cast<XmlNode>().ToList());
+				runSQL(conn, transaction, Node.ChildNodes.Cast<XmlNode>().ToList());
 				conn.Close();
 			}
 			foreach (XmlNode transNode in Node.ChildNodes.Cast<XmlNode>().Where(n2 => n2.Name.ToLower() == "trans")){
 				var tDatabase = Util.GetStr(transNode, "database", database);
 				using (var conn = new SqlConnection(Program.Shared.Databases[tDatabase])){
 					conn.Open();
-					runSQL(conn, transNode.ChildNodes.Cast<XmlNode>().ToList());
+					runSQL(conn, true, transNode.ChildNodes.Cast<XmlNode>().ToList());
 					conn.Close();
 				}
 			}
 			return true;
 		}
 
-		void Select(SqlTransaction trans, XmlNode n)
+		void Select(SqlConnection conn, SqlTransaction trans, XmlNode n)
 		{
 			var to = Util.GetStr(n, "to");
 			var cmdNode = Util.GetChildNode(n, "Cmd");
@@ -63,14 +66,14 @@ namespace DoIt.Functions
 			var sql = Program.Shared.ReplaceTags(cmdNode == null && parametersNode == null ? n.InnerText : cmdNode.InnerText);
 			var timeout = Util.GetStr(n, "timeout");
 			//Program.Shared.WriteLogLine("SQL Select: {0}", sql);
-			var dt = Util.Select(sql, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
+			var dt = Util.Select(sql, conn, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
 			lock (Program.Shared.LockDataTables){
 				Program.Shared.DataTables[to + ";" + Program.Shared.GetSequence()] = dt;
 			}
 			//Program.Shared.WriteLogLine("SQL Select: {0} row(s) found", dt.Rows.Count);
 		}
 
-		bool Scalar(SqlTransaction trans, XmlNode n)
+		bool Scalar(SqlConnection conn, SqlTransaction trans, XmlNode n)
 		{
 			var to = Util.GetStr(n, "to");
 			var cmdNode = Util.GetChildNode(n, "Cmd");
@@ -79,7 +82,7 @@ namespace DoIt.Functions
 			var sql = Program.Shared.ReplaceTags(cmdNode == null && parametersNode == null ? n.InnerText : cmdNode.InnerText);
 			var timeout = Util.GetStr(n, "timeout");
 			//Program.Shared.WriteLogLine("SQL Scalar: {0}", sql);
-			var obj = Util.Scalar(sql, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
+			var obj = Util.Scalar(sql, conn, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
 			lock (Program.Shared.LockVariables){
 				Program.Shared.Variables[to + ";" + Program.Shared.GetSequence()] = obj;
 			}
@@ -87,7 +90,7 @@ namespace DoIt.Functions
 			return true;
 		}
 
-		bool Execute(SqlTransaction trans, XmlNode n)
+		bool Execute(SqlConnection conn, SqlTransaction trans, XmlNode n)
 		{
 			var to = Util.GetStr(n, "to");
 			var cmdNode = Util.GetChildNode(n, "Cmd");
@@ -96,7 +99,7 @@ namespace DoIt.Functions
 			var sql = Program.Shared.ReplaceTags(cmdNode == null && parametersNode == null ? n.InnerText : cmdNode.InnerText);
 			var timeout = Util.GetStr(n, "timeout");
 			//Program.Shared.WriteLogLine("SQL Execute: {0}", sql);
-			var rows = Util.Execute(sql, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
+			var rows = Util.Execute(sql, conn, trans, lstParameters, string.IsNullOrEmpty(timeout) || !timeout.IsMatch("\\d+") ? null : new Nullable<int>(Convert.ToInt32(timeout)));
 			if (!string.IsNullOrEmpty(to))
 				lock (Program.Shared.LockVariables){
 					Program.Shared.Variables[to + ";" + Program.Shared.GetSequence()] = rows;

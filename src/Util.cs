@@ -574,9 +574,9 @@ namespace DoIt
 			}
 		}
 
-		public static DataTable Select(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
+		public static DataTable Select(string sql, SqlConnection connection, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
+			using (var cmd = new SqlCommand(sql, connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
 				if (parameters != null)
@@ -616,9 +616,9 @@ namespace DoIt
 			}
 		}
 
-		public static object Scalar(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
+		public static object Scalar(string sql, SqlConnection connection, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
+			using (var cmd = new SqlCommand(sql, connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
 				if (parameters != null)
@@ -656,9 +656,9 @@ namespace DoIt
 			}
 		}
 
-		public static int Execute(string sql, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
+		public static int Execute(string sql, SqlConnection connection, SqlTransaction transaction, SqlParameter[] parameters = null, Int32? commandTimeout = null)
 		{
-			using (var cmd = new SqlCommand(sql, transaction.Connection, transaction)){
+			using (var cmd = new SqlCommand(sql, connection, transaction)){
 				if (commandTimeout != null)
 					cmd.CommandTimeout = commandTimeout.Value;
 				if (parameters != null)
