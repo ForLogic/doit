@@ -26,12 +26,13 @@ namespace DoIt.Functions
 			var id = Util.GetStr(Node, "id");
 			//if (string.IsNullOrEmpty(id))
 			//	return false;
-			var lstNodes = Util.GetChildNodes(Node, "Upload", "Download", "ListBlobs", "Copy", "SetMetadata", "Snapshot", "DeleteBlobs", "DeleteSnapshot", "DeleteContainers");
+			var lstNodes = Util.GetChildNodes(Node, "Upload", "Download", "ListBlobs", "ListContainers", "Copy", "SetMetadata", "Snapshot", "DeleteBlobs", "DeleteSnapshot", "DeleteContainers");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
 					case "upload": Upload(id, n); break;
 					case "download": Download(id, n); break;
 					case "listblobs": ListBlobs(id, n); break;
+					case "listcontainers": ListContainers(id, n); break;
 					case "copy": Copy(id, n); break;
 					case "setmetadata": SetMetadata(id, n); break;
 					case "snapshot": Snapshot(id, n); break;
@@ -228,6 +229,44 @@ namespace DoIt.Functions
 				Program.Shared.DataTables[to+";"+Program.Shared.GetSequence()] = dt;
 			}
 			Program.Shared.WriteLogLine("List blobs completed: {0} - {1} blob(s) found{2}", blobContainer == null ? blobClient.BaseUri.ToString() : blobContainer.Uri.ToString(), lst.Length, string.IsNullOrEmpty(where) ? null : " and "+dt.Rows.Count+" match(es) the \"where\" condition");
+		}
+
+		// listcontainers
+		void ListContainers(string id, XmlNode n)
+		{
+			var to = Util.GetStr(n, "to");
+			var prefix = Program.Shared.ReplaceTags(Util.GetStr(n, "prefix"));
+			var listingDetails = Util.GetEnumValue(Util.GetStr(n, "listingDetails", "none"), ContainerListingDetails.None);
+			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
+			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
+			var regex = Program.Shared.ReplaceTags(Util.GetStr(n, "regex"));
+			var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
+
+			var dt = new DataTable();
+			dt.Columns.Add("name", typeof(string));
+			dt.Columns.Add("public_access", typeof(string));
+			dt.Columns.Add("etag", typeof(string));
+			dt.Columns.Add("last_modified", typeof(DateTimeOffset));
+			dt.Columns.Add("uri", typeof(string));
+
+			var lst = blobClient.ListContainers(prefix, listingDetails);
+			var totalCount = lst.Count();
+			if (!string.IsNullOrEmpty(regex))
+				lst = lst.Where(c => Regex.IsMatch(c.Name, regex)).ToArray();
+			foreach (var c in lst)
+				dt.Rows.Add(c.Name, c.Properties?.PublicAccess, c.Properties?.ETag, c.Properties?.LastModified, c.Uri.ToString());
+			if (!string.IsNullOrEmpty(where) || !string.IsNullOrEmpty(sort))
+            {
+				var lstRows = dt.Select(where, sort);
+				var dt2 = dt.Clone();
+				foreach (var r in lstRows)
+					dt2.Rows.Add(r.ItemArray);
+				dt = dt2;
+			}
+
+			lock (Program.Shared.LockDataTables)
+				Program.Shared.DataTables[to + ";" + Program.Shared.GetSequence()] = dt;
+			Program.Shared.WriteLogLine("List containers completed: {0} - {1} containers(s) found{2}", blobClient.BaseUri.ToString(), totalCount, string.IsNullOrEmpty(where) && string.IsNullOrEmpty(regex) ? null : " and " + dt.Rows.Count + " matched the conditions");
 		}
 
 		// copy

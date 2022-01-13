@@ -66,6 +66,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
         * [Upload](#ExecuteStorageUpload)
         * [Download](#ExecuteStorageDownload)
         * [ListBlobs](#ExecuteStorageListBlobs)
+        * [ListContainers](#ExecuteStorageListContainers)
         * [Copy](#ExecuteStorageCopy)
         * [SetMetadata] _(Waiting documentation)_
         * [Snapshot] _(Waiting documentation)_
@@ -978,6 +979,27 @@ The columns with the name starting with "metadata_" will only be filled with the
   <Execute>
     <Storage id="1">
       <ListBlobs to="blobs_list" container="container{now:yyyyMM}" prefix="" fetchAttributes="false" details="none|snapshots|metadata" where="" sort="" regex="" />
+    </Storage>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteStorageListContainers">ListContainers</a>
+Query containers and set the resulting list to a variable. The returned datatable contains the following columns:
+
+* name (string)
+* public_access (string)
+* etag (string)
+* last_modified (DateTime)
+* uri (long)
+
+*Tag Location: Configuration > Execute > Storage > ListContainers*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Storage id="1">
+      <ListContainers to="containers_list" prefix="un" where="" sort="" regex="" />
     </Storage>
   </Execute>
 </Configuration>

@@ -105,7 +105,9 @@ namespace DoIt
 
 			// settings: logFile
 			var logFile = Util.GetChildNode(settingsNode, "LogFile");
-			if (logFile != null){
+			if (logFile == null)
+				Shared.IsLogEnabled = false;
+			else {
 				Shared.LogFile = Shared.ReplaceTags(logFile.InnerText);
 				var toVar = Util.GetStr(logFile, "toVar");
 				if (!string.IsNullOrEmpty(toVar))
