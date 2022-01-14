@@ -65,6 +65,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
     15. [Storage](#ExecuteStorage)
         * [Upload](#ExecuteStorageUpload)
         * [Download](#ExecuteStorageDownload)
+        * [DeleteBlob](#ExecuteStorageDeleteBlob)
         * [ListBlobs](#ExecuteStorageListBlobs)
         * [ListContainers](#ExecuteStorageListContainers)
         * [Copy](#ExecuteStorageCopy)
@@ -940,7 +941,7 @@ Upload a file to the specified Azure storage account.
 ```
 
 #### <a id="ExecuteStorageDownload">Download</a>
-Download the specified file.
+Download the specified blob.
 
 *Tag Location: Configuration > Execute > Storage > Download*
 ```xml
@@ -954,6 +955,21 @@ Download the specified file.
 </Configuration>
 ```
 
+#### <a id="ExecuteStorageDeleteBlob">DeleteBlob</a>
+Delete the specified blob.
+
+*Tag Location: Configuration > Execute > Storage > DeleteBlob*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Storage id="1">
+      <DeleteBlob container="my_container" name="myblob.txt" />
+    </Storage>
+  </Execute>
+</Configuration>
+```
+
 #### <a id="ExecuteStorageListBlobs">ListBlobs</a>
 Query blobs and set the resulting list to a variable. The returned datatable contains the following columns:
 
@@ -962,11 +978,12 @@ Query blobs and set the resulting list to a variable. The returned datatable con
 * blob_container (string)
 * blob_uri (string)
 * blob_length (long)
-* blob_last_modified (DateTime)
+* blob_last_modified (DateTimeOffset)
+* blob_last_modified_utc (DateTime)
 * blob_content_type (string)
 * blob_content_md5 (string)
 * blob_is_snapshot (bool)
-* blob_snapshot_time (DateTime)
+* blob_snapshot_time (DateTimeOffset)
 * metadata_name1 (string)*
 * metadata_name2 (string)*
 

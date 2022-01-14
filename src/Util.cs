@@ -261,6 +261,7 @@ namespace DoIt
 							case "onlypathchars": data = Convert.ToString(data).OnlyPathChars(); break;
 							case "filename": data = Convert.ToString(data).GetFileName(); break;
 							case "fileextension": data = Convert.ToString(data).GetFileExtension(); break;
+							case "bytes": data = GetBytes(Convert.ToDecimal(data)); break;
 							default: data = string.Format($"{{0:{v}}}", data); break;
 						}
 
@@ -282,6 +283,23 @@ namespace DoIt
 				m = Regex.Match(str, pattern);
 			}
 			return str;
+		}
+
+		static string GetBytes(decimal bytes)
+        {
+			if (bytes < 1024m)
+				return bytes + " bytes";
+			bytes = bytes / 1024m;
+			if (bytes < 1024m)
+				return Math.Round(bytes, 1) + " KB";
+			bytes = bytes / 1024m;
+			if (bytes < 1024)
+				return Math.Round(bytes, 1) + " MB";
+			bytes = bytes / 1024m;
+			if (bytes < 1024)
+				return Math.Round(bytes, 1) + " GB";
+			bytes = bytes / 1024m;
+			return Math.Round(bytes, 1) + " TB";
 		}
 
 		static string[] GetTagParameters(string str, string tag)

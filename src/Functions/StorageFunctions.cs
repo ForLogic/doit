@@ -26,7 +26,7 @@ namespace DoIt.Functions
 			var id = Util.GetStr(Node, "id");
 			//if (string.IsNullOrEmpty(id))
 			//	return false;
-			var lstNodes = Util.GetChildNodes(Node, "Upload", "Download", "ListBlobs", "ListContainers", "Copy", "SetMetadata", "Snapshot", "DeleteBlobs", "DeleteSnapshot", "DeleteContainers");
+			var lstNodes = Util.GetChildNodes(Node, "Upload", "Download", "ListBlobs", "ListContainers", "Copy", "SetMetadata", "Snapshot", "DeleteMultipleBlobs", "DeleteBlob", "DeleteSnapshot", "DeleteContainers");
 			foreach (var n in lstNodes)
 				switch (n.Name.ToLower()){
 					case "upload": Upload(id, n); break;
@@ -36,7 +36,8 @@ namespace DoIt.Functions
 					case "copy": Copy(id, n); break;
 					case "setmetadata": SetMetadata(id, n); break;
 					case "snapshot": Snapshot(id, n); break;
-					case "deleteblobs": DeleteBlobs(id, n); break;
+					case "deletemultipleblobs": DeleteMultipleBlobs(id, n); break;
+					case "deleteblob": DeleteBlob(id, n); break;
 					case "deletesnapshot": DeleteSnapshot(id, n); break;
 					case "deletecontainers": DeleteContainers(id, n); break;
 				}
@@ -168,6 +169,7 @@ namespace DoIt.Functions
 			dt.Columns.Add("blob_uri", typeof(string));
 			dt.Columns.Add("blob_length", typeof(long));
 			dt.Columns.Add("blob_last_modified", typeof(DateTimeOffset));
+			dt.Columns.Add("blob_last_modified_utc", typeof(DateTime));
 			dt.Columns.Add("blob_content_type", typeof(string));
 			dt.Columns.Add("blob_content_md5", typeof(string));
 			dt.Columns.Add("blob_is_snapshot", typeof(bool));
@@ -177,7 +179,7 @@ namespace DoIt.Functions
 					blob.FetchAttributes();
 					Program.Shared.WriteLogLine("Fetching blob attributes: " + blob.Uri.ToString());
 				}
-				var lstRowData = new List<object>(){blob.Name, blob.Name.GetFileExtension(), blob.Container.Name, blob.Uri.ToString(), blob.Properties.Length, blob.Properties.LastModified, blob.Properties.ContentType, blob.Properties.ContentMD5, blob.IsSnapshot, blob.SnapshotTime};
+				var lstRowData = new List<object>(){blob.Name, blob.Name.GetFileExtension(), blob.Container.Name, blob.Uri.ToString(), blob.Properties.Length, blob.Properties.LastModified, blob.Properties.LastModified?.UtcDateTime, blob.Properties.ContentType, blob.Properties.ContentMD5, blob.IsSnapshot, blob.SnapshotTime};
 				if(blob.Metadata != null){
 					foreach (var k in blob.Metadata.Keys)
 						if (!dt.Columns.Contains("metadata_" + k)){
@@ -340,8 +342,8 @@ namespace DoIt.Functions
             }
         }
 
-		// delete blobs
-		void DeleteBlobs(string id, XmlNode n){
+		// delete multiple blobs
+		void DeleteMultipleBlobs(string id, XmlNode n){
 			var regex = Program.Shared.ReplaceTags(Util.GetStr(n, "regex"));
 			var container = Program.Shared.ReplaceTags(Util.GetStr(n, "container"));
 			var name = Program.Shared.ReplaceTags(Util.GetStr(n, "name"));
@@ -373,6 +375,19 @@ namespace DoIt.Functions
 							Program.Shared.WriteLogLine($"Blob deleted: {blob.Uri.ToString()}");
 				}
 			});
+		}
+
+		// delete blob
+		void DeleteBlob(string id, XmlNode n)
+		{
+			var container = Program.Shared.ReplaceTags(Util.GetStr(n, "container"));
+			var blobName = Program.Shared.ReplaceTags(Util.GetStr(n, "name"));
+			if (string.IsNullOrEmpty(container) || string.IsNullOrEmpty(blobName))
+				return;
+			var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
+			var blobContainer = blobClient.GetContainerReference(container);
+			var blob = blobContainer.GetBlobReference(blobName);
+			blob.DeleteIfExists();
 		}
 
 		// delete snapshot
