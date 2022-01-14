@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -131,9 +132,51 @@ namespace DoIt.Functions
 		void String(XmlNode n){
 			var value = Program.Shared.ReplaceTags(Util.GetStr(n, "value"));
 			var to = Util.GetStr(n, "to");
-			lock (Program.Shared.LockVariables){
-				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = value;
+			var regex = Util.GetStr(n, "regex");
+			var matchIndex = Util.GetStr(n, "matchIndex");
+			var regexFlags = Util.GetStr(n, "regexFlags");
+			var regexGroup = Util.GetStr(n, "regexGroup");
+			var isRegexGroupInt = !string.IsNullOrEmpty(regexGroup) && regexGroup.IsMatch("^\\d+$");
+			var regexGroupInt = isRegexGroupInt ? Convert.ToInt32(regexGroup) : 0;
+			var options = RegexOptions.None;
+			if (!string.IsNullOrEmpty(regexFlags))
+			{
+				if (regexFlags.Contains("i"))
+					options = options | RegexOptions.IgnoreCase;
+				if (regexFlags.Contains("m"))
+					options = options | RegexOptions.Multiline;
 			}
+
+			var mIndex = string.IsNullOrEmpty(matchIndex) || !matchIndex.IsMatch("^\\d+$") ? null : new int?(Convert.ToInt32(matchIndex));
+			if (!string.IsNullOrEmpty(regex))
+			{
+				var lstMatches = Regex.Matches(value, regex, options);
+				if (lstMatches.Count == 0 || !lstMatches.Cast<Match>().Any(m => m.Success))
+					value = "";
+
+				var index = -1;
+				foreach (Match m in lstMatches)
+                {
+					if (!m.Success)
+						continue;
+
+					index++;
+					if (mIndex != null && mIndex != index)
+						continue;
+
+					if (m.Groups.Count > 0)
+					{
+						var g = string.IsNullOrEmpty(regexGroup) ?
+							m.Groups[0] :
+							(isRegexGroupInt ? m.Groups[regexGroupInt] : m.Groups[regexGroup]);
+						value = g?.Value ?? "";
+					}
+					else
+						value = m.Value;
+				}
+            }
+			lock (Program.Shared.LockVariables)
+				Program.Shared.Variables[to+";"+Program.Shared.GetSequence()] = value;
 			Program.Shared.WriteLogLine(string.Format("String variable named \"{0}\" was set to \"{1}\"", to, value));
 		}
 
