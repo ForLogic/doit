@@ -350,7 +350,17 @@ Execute SQL commands.
 <Configuration>
   <Execute>
     <Sql database="1">
-      <Execute timeout="30">insert into backups (start_date) values (getdate())</Execute>
+      <Execute timeout="30">insert into dbo.backups (start_date) values (getdate())</Execute>
+      <Execute timeout="30">
+        <Cmd>
+          update dbo.table set value1=@Value1, value2=@Value2 where id=@Id
+        </Cmd>
+        <Params>
+          <Value1 type="string">{str1}</Value1>
+          <Value2 type="string">{str2}</Value2>
+          <Id type="int">{id}</Id>
+        </Params>
+      </Execute>
     </Sql>
   </Execute>
 </Configuration>
@@ -366,7 +376,15 @@ Execute SQL queries and set the results to the specified variable.
   <Execute>
     <Sql database="1">
       <Select to="users_table" timeout="30">
-        select us.id, us.name, us.email from users us where us.removed=0
+        select us.id, us.name, us.email from dbo.users us where us.removed=0
+      </Select>
+      <Select to="users_table" timeout="30">
+        <Cmd>
+          select u.* from dbo.users u where u.id=@UserId
+        </Cmd>
+        <Params>
+          <UserId type="int">{user_id}</UserId>
+        </Params>
       </Select>
     </Sql>
   </Execute>
@@ -384,6 +402,14 @@ Execute the SQL command/query and set the result to the specified variable.
     <Sql database="1">
       <Scalar to="user_id" timeout="30">
         select us.id from users us where us.email='user@mycompany.com'
+      </Scalar>
+      <Scalar to="user_id" timeout="30">
+        <Cmd>
+          select us.id from users us where us.email=@Email
+        </Cmd>
+        <Params>
+          <Email type="string">{email}</Email>
+        </Params>
       </Scalar>
     </Sql>
   </Execute>
