@@ -286,6 +286,11 @@ namespace DoIt.Functions
 			if (blobContainer2.CreateIfNotExists())
 				blobContainer2.SetPermissions(new BlobContainerPermissions() { PublicAccess = BlobContainerPublicAccessType.Off });
 			var blob2 = blobContainer2.GetBlockBlobReference(toBlob.Substring(toBlob.IndexOf("/") + 1));
+			var exists = blob2.Exists();
+			if (exists && blob1.Properties != null && blob2.Properties != null && blob2.Properties.Length == blob1.Properties.Length && blob2.Properties.ContentMD5 == blob1.Properties.ContentMD5)
+				return;
+			if (exists)
+				blob2.Delete();
 			var sig = blob1.GetSharedAccessSignature(new SharedAccessBlobPolicy() { SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(30), Permissions = SharedAccessBlobPermissions.Read });
 			blob2.StartCopy(new Uri(blob1.Uri.AbsoluteUri + sig));
 			//Program.Shared.WriteLogLine("Copy blob: {0} -> {1}", blob1.Uri.ToString(), blob2.Uri.ToString());
