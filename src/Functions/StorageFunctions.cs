@@ -276,6 +276,9 @@ namespace DoIt.Functions
 			var blob = Program.Shared.ReplaceTags(Util.GetStr(n, "blob"));
 			var toBlob = Program.Shared.ReplaceTags(Util.GetStr(n, "toBlob"));
 			var toStorage = Util.GetStr(n, "toStorage");
+			var time = Util.GetStr(n, "sleep", "0");
+			var timeSpan = Util.GetTimeSpan(time);
+			var log = Util.GetStr(Node, "log", "true") == "true";
 			var blobClient1 = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 			var blobContainer1 = blobClient1.GetContainerReference(blob.Remove(blob.IndexOf("/")));
 			var blob1 = blobContainer1.GetBlockBlobReference(blob.Substring(blob.IndexOf("/") + 1));
@@ -293,8 +296,11 @@ namespace DoIt.Functions
 				blob2.Delete();
 			var sig = blob1.GetSharedAccessSignature(new SharedAccessBlobPolicy() { SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(30), Permissions = SharedAccessBlobPermissions.Read });
 			blob2.StartCopy(new Uri(blob1.Uri.AbsoluteUri + sig));
-			//Program.Shared.WriteLogLine("Copy blob: {0} -> {1}", blob1.Uri.ToString(), blob2.Uri.ToString());
-		}
+			if (log)
+				Program.Shared.WriteLogLine("Copy blob: {0} -> {1}", blob1.Uri.ToString(), blob2.Uri.ToString());
+			if (timeSpan != TimeSpan.Zero)
+				System.Threading.Thread.Sleep(timeSpan);
+        }
 
 		// set metadata
 		void SetMetadata(string id, XmlNode n){

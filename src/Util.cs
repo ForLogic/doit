@@ -508,7 +508,7 @@ namespace DoIt
 
 		public static TimeSpan GetTimeSpan(string timespan)
 		{
-			if (string.IsNullOrEmpty(timespan))
+			if (string.IsNullOrEmpty(timespan) || timespan.Trim() == "0")
 				return TimeSpan.Zero;
 			timespan = timespan.ToLower();
 			var m = Regex.Match(timespan, "^(?<value>\\d+)\\s*(?<measure>millisecond|second|minute|hour|day|week)s?$");
