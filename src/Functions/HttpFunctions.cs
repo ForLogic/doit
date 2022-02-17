@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Xml;
 
 namespace DoIt.Functions
@@ -35,6 +36,7 @@ namespace DoIt.Functions
 
 			var headersNode = Util.GetChildNode(n, "Headers");
 			var lstHeaders = Util.GetChildNodes(headersNode, "Header");
+			var bodyNode = Util.GetChildNode(n, "Body");
 
 			var m = GetMethod(method);
 			using (var msg = new HttpRequestMessage(m, url))
@@ -47,6 +49,12 @@ namespace DoIt.Functions
 						if (!string.IsNullOrEmpty(headerName))
 							msg.Headers.Add(headerName, hNode.InnerXml);
 					}
+
+				if (bodyNode != null)
+                {
+					var bType = Util.GetStr(bodyNode, "type");
+					msg.Content = new StringContent(bodyNode.InnerXml, Encoding.UTF8, bType);
+				}
 
 				var task = http.SendAsync(msg);
 				task.Wait();

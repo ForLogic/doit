@@ -1158,16 +1158,17 @@ Make HTTP Requests.
   <Execute>
 
     <Http>
-      <Request method="get" url="https://www.my-company-url.com/test1" toVar="resultData">
+      <Request method="get" url="https://www.my-company-url.com/view/1" toFile="%programdata%\DoIt\get-request.html"></Request>
+    </Http>
+
+    <Http>
+      <Request method="post" url="https://www.my-company-url.com/save/1" toVar="resultData">
         <Headers>
           <Header name="header1">value1</Header>
           <Header name="header2">value2</Header>
         </Headers>
+        <Body type="application/json">{"id":5,"name":"User 5"}</Body>
       </Request>
-    </Http>
-
-    <Http>
-      <Request method="get" url="https://www.my-company-url.com/test2" toFile="%programdata%\DoIt\get-request.html"></Request>
     </Http>
 
   </Execute>
