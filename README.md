@@ -1157,18 +1157,18 @@ Make HTTP Requests.
 <Configuration>
   <Execute>
 
-	<Http>
-		<Request method="get" url="https://www.my-company-url.com/test1" toVar="resultData">
-            <Headers>
-                <Header name="header1">value1</Header>
-                <Header name="header2">value2</Header>
-            </Headers>
-        </Request>
-	</Http>
+    <Http>
+      <Request method="get" url="https://www.my-company-url.com/test1" toVar="resultData">
+        <Headers>
+          <Header name="header1">value1</Header>
+          <Header name="header2">value2</Header>
+        </Headers>
+      </Request>
+    </Http>
 
-	<Http>
-		<Request method="get" url="https://www.my-company-url.com/test2" toFile="%programdata%\DoIt\get-request.html"></Request>
-	</Http>
+    <Http>
+      <Request method="get" url="https://www.my-company-url.com/test2" toFile="%programdata%\DoIt\get-request.html"></Request>
+    </Http>
 
   </Execute>
 </Configuration>
