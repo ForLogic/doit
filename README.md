@@ -72,14 +72,16 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
         * [SetMetadata] _(Waiting documentation)_
         * [Snapshot] _(Waiting documentation)_
     16. [Condition](#ExecuteCondition)
-    17. [Ftp](#ExecuteFtp)
+    17. [Http](#ExecuteHttp)
+        * [Request](#ExecuteHttpRequest)
+    18. [Ftp](#ExecuteFtp)
         * [List](#ExecuteFtpList)
         * [Download](#ExecuteFtpDownload)
         * [Upload](#ExecuteFtpUpload)
         * [CreateFolder](#ExecuteFtpCreateFolder)
         * [DeleteFolder](#ExecuteFtpDeleteFolder)
         * [DeleteFile](#ExecuteFtpDeleteFile)
-    18. Services _(To-Do)_
+    19. Services _(To-Do)_
         * Start
         * Stop
 
@@ -1143,6 +1145,35 @@ Perform a condition and run only the "True" or "False" inner tag, according to t
   </False>
 </Condition>
 ```
+
+### <a id="ExecuteHttp">Http</a>
+
+#### <a id="ExecuteHttpRequest">Request</a>
+Make HTTP Requests.
+
+*Tag Location: Configuration > Execute > Http > Request*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+
+	<Http>
+		<Request method="get" url="https://www.my-company-url.com/test1" toVar="resultData">
+            <Headers>
+                <Header name="header1">value1</Header>
+                <Header name="header2">value2</Header>
+            </Headers>
+        </Request>
+	</Http>
+
+	<Http>
+		<Request method="get" url="https://www.my-company-url.com/test2" toFile="%programdata%\DoIt\get-request.html"></Request>
+	</Http>
+
+  </Execute>
+</Configuration>
+```
+
 
 ### <a id="ExecuteFtp">Ftp</a>
 
