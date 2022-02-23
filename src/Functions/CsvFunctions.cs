@@ -62,7 +62,10 @@ namespace DoIt.Functions
 			var datatable = Program.Shared.GetDataTable(Program.Shared.ThreadID(), data);
 			if (datatable == null)
 				return;
-			var lstColumns = Util.GetChildNodes(n, "Column").Select(n2 => new { Header = Util.GetStr(n2, "header"), Value = Program.Shared.ReplaceTags(n2.InnerXml) }).Where(n2 => !string.IsNullOrEmpty(n2.Value)).ToDictionary(n2 => n2.Header, n2 => n2.Value);
+			var columnsNodes = Util.GetChildNodes(n, "Column");
+			var lstColumns = columnsNodes == null || columnsNodes.Length == 0 ?
+				datatable.Columns.Cast<DataColumn>().ToDictionary(c => c.ColumnName, c => c.ColumnName) :
+				columnsNodes.Select(n2 => new { Header = Util.GetStr(n2, "header"), Value = Program.Shared.ReplaceTags(n2.InnerXml) }).Where(n2 => !string.IsNullOrEmpty(n2.Value)).ToDictionary(n2 => n2.Header, n2 => n2.Value);
 			var lastColumn = lstColumns.Keys.LastOrDefault();
 			if (!Directory.Exists(Path.GetDirectoryName(path)))
 				Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -77,7 +80,7 @@ namespace DoIt.Functions
 				var lstRows = string.IsNullOrEmpty(where) ? datatable.Rows.Cast<DataRow>().ToArray() : datatable.Select(where, sort);
 				foreach (DataRow r in lstRows){
 					foreach (var c in lstColumns.Keys){
-						sw.Write("\""+Program.Shared.ReplaceTags(lstColumns[c], new Dictionary<string, DataRow>(){{data,r}}).Replace("\"","\"\"")+"\"");
+						sw.Write("\""+ (r[c] == null || r[c] == DBNull.Value ? "" : Convert.ToString(r[c]).Replace("\"","\"\"")) +"\"");
 						if (c != lastColumn)
 							sw.Write(separator);
 					}

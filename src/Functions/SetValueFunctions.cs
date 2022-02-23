@@ -138,6 +138,16 @@ namespace DoIt.Functions
 			var regexGroup = Util.GetStr(n, "regexGroup");
 			var isRegexGroupInt = !string.IsNullOrEmpty(regexGroup) && regexGroup.IsMatch("^\\d+$");
 			var regexGroupInt = isRegexGroupInt ? Convert.ToInt32(regexGroup) : 0;
+			var replaceNodes = Util.GetChildNodes(n, "Replace");
+			if (replaceNodes != null)
+				foreach (var rNode in replaceNodes)
+                {
+					var oldValue = Util.GetStr(rNode, "oldValue");
+					var newValue = Util.GetStr(rNode, "newValue");
+					if (!string.IsNullOrWhiteSpace(oldValue))
+						value = value.Replace(oldValue, newValue);
+				}
+
 			var options = RegexOptions.None;
 			if (!string.IsNullOrEmpty(regexFlags))
 			{

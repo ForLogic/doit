@@ -830,6 +830,10 @@ Set the value to the specified string variable.
     <SetValue>
       <String value="User Name: {users_list.name}" to="user_name_text" />
       <String value="My name is 'John' and today is {today:yyyy-MM-dd}" to="string_test" />
+      <String value="Good morning, John!" to="string_test">
+        <Replace oldValue="morning" newValue="afternoon" />
+        <Replace oldValue="John" newValue="Peter" />
+      </String>
       <String value="{string_test}" to="date_from_str" regex="(\d{4}\-\d{2}\-\d{2})" regexFlags="" regexGroup="" matchIndex="" />
       <String value="{string_test}" to="name_from_str" regex="'([a-z]+)'" regexFlags="i" regexGroup="1" matchIndex="" />
     </SetValue>
