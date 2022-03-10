@@ -31,6 +31,8 @@ namespace DoIt.Functions
 			if (string.IsNullOrEmpty(smtp))
 				return false;
 			var to = Util.GetStr(Node, "to");
+			var cc = Util.GetStr(Node, "cc");
+			var bcc = Util.GetStr(Node, "bcc");
 			var host = Util.GetConfigData(smtp, "host");
 			if (String.IsNullOrEmpty(to) || String.IsNullOrEmpty(host))
 				return false;
@@ -89,8 +91,15 @@ namespace DoIt.Functions
 					mail.Attachments.Add(new Attachment(sr, attachmentName, Util.GetContentType(attachmentName)));
 				}
 			mail.From = new MailAddress(from);
-			foreach (var m in to.Split(new String[]{",",";"," "}, StringSplitOptions.RemoveEmptyEntries))
-				mail.To.Add(new MailAddress(m));
+			if (!string.IsNullOrEmpty(to))
+				foreach (var m in to.Split(new String[]{",",";"," "}, StringSplitOptions.RemoveEmptyEntries))
+					mail.To.Add(new MailAddress(m));
+			if (!string.IsNullOrEmpty(cc))
+				foreach (var m in cc.Split(new String[] { ",", ";", " " }, StringSplitOptions.RemoveEmptyEntries))
+					mail.CC.Add(new MailAddress(m));
+			if (!string.IsNullOrEmpty(bcc))
+				foreach (var m in bcc.Split(new String[] { ",", ";", " " }, StringSplitOptions.RemoveEmptyEntries))
+					mail.Bcc.Add(new MailAddress(m));
 			mail.Subject = subject;
 			mail.Body = body;
 			var smtpClient = new SmtpClient(host, port);
