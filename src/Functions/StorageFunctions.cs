@@ -2,6 +2,7 @@
 using LumenWorks.Framework.IO.Csv;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -54,7 +55,18 @@ namespace DoIt.Functions
 			var deleteSource = Util.GetStr(n, "deleteSource", "false").ToLower() == "true";
 			var async = Util.GetStr(n, "async", "false").ToLower() == "true";
 			var lstFiles = string.IsNullOrEmpty(file) && !string.IsNullOrEmpty(folder) ? Util.GetFiles(folder, pattern) : new string[]{file};
-			var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
+            var timeout = Util.GetStr(n, "timeout", "0");
+            var retryTime = Util.GetStr(n, "retryTime", "30s");
+            var retryAttempts = Util.GetStr(n, "retryAttempts", "0");
+			var options = null as BlobRequestOptions;
+			if (timeout != "0" || retryAttempts != "0") {
+				options = new BlobRequestOptions();
+				if (timeout != "0")
+					options.MaximumExecutionTime = Util.GetTimeSpan(timeout);
+				if (retryAttempts != "0")
+					options.RetryPolicy = new LinearRetry(Util.GetTimeSpan(retryTime), Convert.ToInt32(retryAttempts));
+            }
+            var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 			var blobContainer = blobClient.GetContainerReference((toBlob??toFolder).Remove(toBlob.IndexOf("/")));
 			if (blobContainer.CreateIfNotExists())
 				blobContainer.SetPermissions(new BlobContainerPermissions(){PublicAccess=BlobContainerPublicAccessType.Off});
@@ -68,7 +80,7 @@ namespace DoIt.Functions
 				blob.Properties.ContentType = Util.GetContentType(f);
 				Program.Shared.WriteLogLine(String.Format("Sending File To Storage (File: {0}; Size: {1}).", Path.GetFileName(f), Util.GetFileSize(new FileInfo(f).Length)));
 				if (async){
-					var task = blob.UploadFromFileAsync(f);
+					var task = blob.UploadFromFileAsync(f, null, options, null);
 					Program.Shared.StorageUploadTasks.Add(task);
 					task.ContinueWith(t => {
 						if (deleteSource && File.Exists(f)){
@@ -77,7 +89,7 @@ namespace DoIt.Functions
 						}
 					});
 				}else{
-					blob.UploadFromFile(f);
+                    blob.UploadFromFile(f, null, options);
 					if (deleteSource && File.Exists(f)){
 						File.Delete(f);
 						Program.Shared.WriteLogLine(String.Format("File Deleted: {0}.", f));
@@ -93,6 +105,15 @@ namespace DoIt.Functions
 			var toFile = Program.Shared.ReplaceTags(Util.GetStr(n, "toFile"));
 			var sas = Program.Shared.ReplaceTags(Util.GetStr(n, "sharedAccessSignature"));
 			var snapshotTime = Util.ParseDateTimeOffset(Program.Shared.ReplaceTags(Util.GetStr(n, "snapshotTime")));
+            var timeout = Util.GetStr(n, "timeout", "0");
+            var retryTime = Util.GetStr(n, "retryTime", "30s");
+            var retryAttempts = Util.GetStr(n, "retryAttempts", "0");
+			var options = new BlobRequestOptions() { DisableContentMD5Validation = true };
+			if (timeout != "0")
+				options.MaximumExecutionTime = Util.GetTimeSpan(timeout);
+			if (retryAttempts != "0")
+				options.RetryPolicy = new LinearRetry(Util.GetTimeSpan(retryTime), Convert.ToInt32(retryAttempts));
+
 			if (!string.IsNullOrEmpty(blobName)){
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
@@ -101,7 +122,7 @@ namespace DoIt.Functions
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
 						Directory.CreateDirectory(dir);
-					blob.DownloadToFile(toFile, FileMode.Create);
+					blob.DownloadToFile(toFile, FileMode.Create, null, options);
 				}
 			}
 			if(!string.IsNullOrEmpty(blobUri)){
@@ -110,7 +131,7 @@ namespace DoIt.Functions
 					var dir = Path.GetDirectoryName(toFile);
 					if (!Directory.Exists(dir))
 						Directory.CreateDirectory(dir);
-					blob.DownloadToFile(toFile, FileMode.Create);
+					blob.DownloadToFile(toFile, FileMode.Create, null, options);
 				}
 			}
 		}
@@ -148,16 +169,28 @@ namespace DoIt.Functions
 			var sort = Program.Shared.ReplaceTags(Util.GetStr(n, "sort"));
 			var regex = Program.Shared.ReplaceTags(Util.GetStr(n, "regex"));
 			var sas = Program.Shared.ReplaceTags(Util.GetStr(n, "sharedAccessSignature"));
+			var timeout = Util.GetStr(n, "timeout", "0");
+            var retryTime = Util.GetStr(n, "retryTime", "30s");
+            var retryAttempts = Util.GetStr(n, "retryAttempts", "0");
+			var options = null as BlobRequestOptions;
+			if (timeout != "0" || retryAttempts != "0") {
+				options = new BlobRequestOptions();
+				if (timeout != "0")
+					options.MaximumExecutionTime = Util.GetTimeSpan(timeout);
+				if (retryAttempts != "0")
+					options.RetryPolicy = new LinearRetry(Util.GetTimeSpan(retryTime), Convert.ToInt32(retryAttempts));
+            }
+
 			var lst = null as CloudBlob[];
 			var blobClient = null as CloudBlobClient;
 			var blobContainer = null as CloudBlobContainer;
 			if (string.IsNullOrEmpty(uri)){
 				blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[id]).CreateCloudBlobClient();
 				blobContainer = string.IsNullOrEmpty(container) ? null : blobClient.GetContainerReference(container + (!string.IsNullOrEmpty(sas) && Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null));
-				lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
+				lst = (blobContainer == null ? blobClient.ListBlobs(prefix, flat, details, options) : (blobContainer.Exists() ? blobContainer.ListBlobs(prefix, flat, details, options) : new CloudBlob[0])).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
 			} else {
 				blobContainer = new CloudBlobContainer(new Uri(uri + (Program.Shared.SharedAccessSignatures.ContainsKey(sas) ? Program.Shared.SharedAccessSignatures[sas] : null)));
-				lst = blobContainer.ListBlobs(prefix, flat, details).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
+				lst = blobContainer.ListBlobs(prefix, flat, details, options).Where(b => b is CloudBlob).Cast<CloudBlob>().ToArray();
 			}
 			if (!string.IsNullOrEmpty(regex))
 				lst = lst.Where(b => Regex.IsMatch(b.Uri.PathAndQuery, regex)).ToArray();

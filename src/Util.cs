@@ -511,19 +511,24 @@ namespace DoIt
 			if (string.IsNullOrEmpty(timespan) || timespan.Trim() == "0")
 				return TimeSpan.Zero;
 			timespan = timespan.ToLower();
-			var m = Regex.Match(timespan, "^(?<value>\\d+)\\s*(?<measure>millisecond|second|minute|hour|day|week)s?$");
+			var m = Regex.Match(timespan, "^(?<value>\\d+)\\s*(?<measure>ms|millisecond|s|second|min|minute|h|hour|day|week|month)s?$");
 			if (!m.Success)
 				throw new ArgumentException($"Invalid GetTimeSpan parameter \"{timespan}\"");
 			var value = Convert.ToInt32(m.Groups["value"].Value);
 			var measure = m.Groups["measure"].Value;
 			switch(measure){
-				case "millisecond": return TimeSpan.FromMilliseconds(value);
-				case "second": return TimeSpan.FromSeconds(value);
-				case "minute": return TimeSpan.FromMinutes(value);
-				case "hour": return TimeSpan.FromHours(value);
+                case "ms":
+                case "millisecond": return TimeSpan.FromMilliseconds(value);
+                case "s":
+                case "second": return TimeSpan.FromSeconds(value);
+                case "min":
+                case "minute": return TimeSpan.FromMinutes(value);
+                case "h":
+                case "hour": return TimeSpan.FromHours(value);
 				case "day": return TimeSpan.FromDays(value);
-				case "week": return TimeSpan.FromDays(value*7);
-			}
+				case "week": return TimeSpan.FromDays(value * 7);
+                case "month": return TimeSpan.FromDays(value * 30);
+            }
 			return TimeSpan.Zero;
 		}
 

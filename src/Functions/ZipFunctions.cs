@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -133,7 +134,16 @@ namespace DoIt.Functions
 			var fromStorage = Util.GetStr(n, "fromStorage");
 			var forEach = Util.GetStr(n, "forEach");
 			var where = Program.Shared.ReplaceTags(Util.GetStr(n, "where"));
-			var dt = string.IsNullOrEmpty(forEach) ? null : Program.Shared.GetDataTable(Program.Shared.ThreadID(), forEach);
+            var timeout = Util.GetStr(n, "timeout", "0");
+            var retryTime = Util.GetStr(n, "retryTime", "30s");
+            var retryAttempts = Util.GetStr(n, "retryAttempts", "0");
+			var options = new BlobRequestOptions() { DisableContentMD5Validation = true };
+            if (timeout != "0")
+                options.MaximumExecutionTime = Util.GetTimeSpan(timeout);
+            if (retryAttempts != "0")
+                options.RetryPolicy = new LinearRetry(Util.GetTimeSpan(retryTime), Convert.ToInt32(retryAttempts));
+
+            var dt = string.IsNullOrEmpty(forEach) ? null : Program.Shared.GetDataTable(Program.Shared.ThreadID(), forEach);
 			var lstRows = dt==null ? new DataRow[0] : string.IsNullOrEmpty(where) ? dt.Rows.Cast<DataRow>().ToArray() : dt.Select(where);
 			var rowsCount = dt == null ? 1 : lstRows.Length;
 			for(var x=0; x<rowsCount; x++){
@@ -154,7 +164,7 @@ namespace DoIt.Functions
 					size = blob.Properties.Length;
 				}
 				zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=(dateTime??DateTimeOffset.Now).DateTime, Size=size});
-				blob.DownloadToStream(zipStream, null, new BlobRequestOptions() { DisableContentMD5Validation = true });
+				blob.DownloadToStream(zipStream, null, options);
 				Program.Shared.WriteLogLine(String.Format("Add Blob to Zip (Blob: {0}; Blob Size: {1}).", blob.Uri.ToString(), Util.GetFileSize(size)));
 			}
 		}

@@ -266,7 +266,7 @@ Download blob from a storage account and add it to the specified zip package.
   <Execute>
     <Zip path="C:\MyFiles.zip" mode="write">
       <AddBlob fromStorage="1" name="my_container/myblob1.txt" zipFolder="" zipFilename="File.txt" />
-      <AddBlob forEach="blobs_list" where="blob_length <= 5*1024*1024" fromStorage="1" name="{blobs_list.blob_container}/{blobs_list.blob_name}" snapshotTime="" dateTime="{blobs_list.blob_last_modified}" size="{blobs_list.blob_length}" />
+      <AddBlob forEach="blobs_list" where="blob_length <= 5*1024*1024" fromStorage="1" name="{blobs_list.blob_container}/{blobs_list.blob_name}" snapshotTime="" dateTime="{blobs_list.blob_last_modified}" size="{blobs_list.blob_length}" timeout="60min" retryTime="30s" retryAttempts="0" />
     </Zip>
   </Execute>
 </Configuration>
@@ -969,7 +969,7 @@ Upload a file to the specified Azure storage account.
 <Configuration>
   <Execute>
     <Storage id="1">
-      <Upload file="C:\MyFile_{now:yyyy-MM-dd}.csv" toBlob="backups/Backup_{now:yyyy-MM-dd}/MyFile.csv" deleteSource="true" async="true" />
+      <Upload file="C:\MyFile_{now:yyyy-MM-dd}.csv" toBlob="backups/Backup_{now:yyyy-MM-dd}/MyFile.csv" deleteSource="true" async="true" timeout="60min" retryTime="30s" retryAttempts="0" />
     </Storage>
   </Execute>
 </Configuration>
@@ -984,7 +984,7 @@ Download the specified blob.
 <Configuration>
   <Execute>
     <Storage id="1">
-      <Download blob="my_container/myblob.txt" toFile="C:\MyFile.txt" snapshotTime="" />
+      <Download blob="my_container/myblob.txt" toFile="C:\MyFile.txt" snapshotTime="" timeout="60min" retryTime="30s" retryAttempts="0" />
     </Storage>
   </Execute>
 </Configuration>
@@ -1030,7 +1030,7 @@ The columns with the name starting with "metadata_" will only be filled with the
 <Configuration>
   <Execute>
     <Storage id="1">
-      <ListBlobs to="blobs_list" container="container{now:yyyyMM}" prefix="" fetchAttributes="false" details="none|snapshots|metadata" where="" sort="" regex="" />
+      <ListBlobs to="blobs_list" container="container{now:yyyyMM}" prefix="" fetchAttributes="false" details="none|snapshots|metadata" where="" sort="" regex="" timeout="60min" retryTime="30s" retryAttempts="0" />
     </Storage>
   </Execute>
 </Configuration>
