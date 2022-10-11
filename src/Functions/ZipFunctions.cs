@@ -163,9 +163,9 @@ namespace DoIt.Functions
 					dateTime = blob.Properties.LastModified.Value.DateTime;
 					size = blob.Properties.Length;
 				}
-				zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=(dateTime??DateTimeOffset.Now).DateTime, Size=size});
-				blob.DownloadToStream(zipStream, null, options);
-				Program.Shared.WriteLogLine(String.Format("Add Blob to Zip (Blob: {0}; Blob Size: {1}).", blob.Uri.ToString(), Util.GetFileSize(size)));
+                zipStream.PutNextEntry(new ZipEntry(zipEntry){DateTime=(dateTime??DateTimeOffset.Now).DateTime, Size=size});
+                Program.Shared.WriteLogLine(String.Format("Add Blob to Zip ({0}/{1}; Blob: {2}; Blob Size: {3}).", x + 1, rowsCount, blob.Uri.ToString(), Util.GetFileSize(size)));
+                blob.DownloadToStream(zipStream, null, options);
 			}
 		}
 	}
