@@ -2,11 +2,10 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/src/.vs/DoIt/v14
 /src/bin/AnyCPU/Debug
 /src/bin/AnyCPU/Release
 /src/bin/x64/Debug
 /src/bin/x64/Release
 /src/obj/
-/src/.vs/DoIt/v15
 /src/.vs/DoIt/FileContentIndex
+/src/.vs/DoIt/v17
