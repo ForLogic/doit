@@ -12,7 +12,7 @@ This tool runs a xml script to automate recurring tasks. Useful on backup scenar
 3. [Execute Commands](#ExecuteCommands)
     1. [Database](#ExecuteDatabase)
         * [Backup](#ExecuteDatabaseBackup)
-        * BackupLog
+        * [BackupLog](#ExecuteDatabaseBackupLog)
     2. [Zip](#ExecuteZip)
         * [AddFile](#ExecuteZipAddFile)
         * [AddBlob](#ExecuteZipAddBlob)
@@ -233,6 +233,21 @@ Backup SQL Server databases.
   <Execute>
     <Database id="1">
       <Backup toFile="%programdata%\DoIt\MyDatabase_{now:yyyy-MM-dd_HH-mm}.bak" type="bak" withOptions="with compression" timeout="1800" toVar="bak1" />
+    </Database>
+  </Execute>
+</Configuration>
+```
+
+#### <a id="ExecuteDatabaseBackupLog">BackupLog</a>
+Backup Log SQL Server databases.
+
+*Tag Location: Configuration > Execute > Database > BackupLog*
+```xml
+<?xml version="1.0" encoding="utf-16" ?>
+<Configuration>
+  <Execute>
+    <Database id="1">
+      <BackupLog toFile="%programdata%\DoIt\MyDatabaseLog_{now:yyyy-MM-dd_HH-mm}.bak" withOptions="with compression" timeout="1800" toVar="bak1" />
     </Database>
   </Execute>
 </Configuration>
