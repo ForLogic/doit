@@ -152,7 +152,9 @@ namespace DoIt.Functions
 				var blobClient = CloudStorageAccount.Parse(Program.Shared.Storages[fromStorage]).CreateCloudBlobClient();
 				var blobName = Program.Shared.ReplaceTags(Util.GetStr(n, "name"), lstCurrentRows);
 				var blobContainer = blobClient.GetContainerReference(blobName.Remove(blobName.IndexOf("/")));
-				var blob = blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/")+1), snapshotTime.Value);
+				var blob = snapshotTime == null ?
+                    blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/") + 1)):
+					blobContainer.GetBlockBlobReference(blobName.Substring(blobName.IndexOf("/") + 1), snapshotTime.Value);
 				var dateTime = Util.ParseDateTimeOffset(Program.Shared.ReplaceTags(Util.GetStr(n, "dateTime"), lstCurrentRows));
 				var size = Convert.ToInt64(Program.Shared.ReplaceTags(Util.GetStr(n, "size", "0"), lstCurrentRows));
 				var zipEntry = GetZipEntry(n, lstCurrentRows, blob.Name);
