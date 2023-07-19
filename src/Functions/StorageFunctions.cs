@@ -325,8 +325,6 @@ namespace DoIt.Functions
 			var exists = blob2.Exists();
 			if (exists && blob1.Properties != null && blob2.Properties != null && blob2.Properties.Length == blob1.Properties.Length && blob2.Properties.ContentMD5 == blob1.Properties.ContentMD5)
 				return;
-			if (exists)
-				blob2.Delete();
 			var sig = blob1.GetSharedAccessSignature(new SharedAccessBlobPolicy() { SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(30), Permissions = SharedAccessBlobPermissions.Read });
 			blob2.StartCopy(new Uri(blob1.Uri.AbsoluteUri + sig));
 			if (log)
