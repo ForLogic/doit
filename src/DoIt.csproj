@@ -138,6 +138,7 @@
     <Compile Include="Functions\SetValueFunctions.cs" />
     <Compile Include="Functions\ZipFunctions.cs" />
     <Compile Include="RijndaelEnhanced.cs" />
+    <Compile Include="StaticRandom.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Functions\FunctionsNodeHandlerBase.cs" />
     <Compile Include="Functions\DataTableFunctions.cs" />

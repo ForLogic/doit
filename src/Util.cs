@@ -8,7 +8,6 @@ using System.Data.SqlClient;
 using System.Data;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Text;
-using System.Data.Common;
 
 namespace DoIt
 {
@@ -320,16 +319,13 @@ namespace DoIt
 			return lst.ToArray();
 		}
 
-		static Random RandomInstance { get; set; } = new Random();
-
         public static string Random(int charCount, string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVXWYZabcdefghijklmnopqrstuvxwyz")
         {
             var sb = new StringBuilder();
-            for (var x = 0; x < charCount; x++)
-				lock (RandomInstance){
-					var rValue = RandomInstance.Next(chars.Length);
-					sb.Append(chars[rValue]);
-				}
+            for (var x = 0; x < charCount; x++){
+				var rValue = StaticRandom.Next(chars.Length);
+				sb.Append(chars[rValue]);
+			}
             return sb.ToString();
         }
 
